@@ -1,0 +1,112 @@
+{
+  "cars": [
+    {
+      "id": "car-1",
+      "image": "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=600&q=80",
+      "title": "Toyota Avanza",
+      "subtitle": "MPV • 7 Kursi",
+      "price": "Rp 450k",
+      "badge": "Terlaris",
+      "slug": "toyota-avanza",
+      "transmission": "Manual",
+      "fuel": "Bensin"
+    },
+    {
+      "id": "car-2",
+      "image": "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=600&q=80",
+      "title": "Honda CR-V",
+      "subtitle": "SUV • 5 Kursi",
+      "price": "Rp 850k",
+      "slug": "honda-cr-v",
+      "transmission": "Automatic",
+      "fuel": "Bensin"
+    },
+    {
+      "id": "car-3",
+      "image": "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=600&q=80",
+      "title": "Suzuki Ertiga",
+      "subtitle": "MPV • 7 Kursi",
+      "price": "Rp 400k",
+      "slug": "suzuki-ertiga",
+      "transmission": "Manual",
+      "fuel": "Bensin"
+    },
+    {
+      "id": "car-4",
+      "image": "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=600&q=80",
+      "title": "Toyota Avanza",
+      "subtitle": "MPV • 7 Kursi",
+      "price": "Rp 450k",
+      "slug": "toyota-avanza",
+      "badge": "Terlaris",
+      "transmission": "Manual",
+      "fuel": "Bensin"
+    },
+    {
+      "id": "car-5",
+      "image": "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=600&q=80",
+      "title": "Honda CR-V",
+      "subtitle": "SUV • 5 Kursi",
+      "price": "Rp 850k",
+      "slug": "honda-cr-v",
+      "transmission": "Automatic",
+      "fuel": "Bensin"
+    },
+    {
+      "id": "car-6",
+      "image": "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=600&q=80",
+      "title": "Suzuki Ertiga",
+      "subtitle": "MPV • 7 Kursi",
+      "price": "Rp 400k",
+      "slug": "suzuki-ertiga",
+      "transmission": "Manual",
+      "fuel": "Bensin"
+    }
+  ],
+  "cars_details": [
+    {
+      "slug": "toyota-avanza",
+      "badge": "Terpopuler",
+      "name": "Toyota Avanza 2023",
+      "tagline": "MPV • Modern & Luas",
+      "heroImage": "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1200&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=300&q=80",
+        "https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&w=300&q=80",
+        "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=300&q=80",
+        "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=300&q=80"
+      ],
+      "pricePerDay": "Rp 450.000",
+      "priceLabel": "/hari",
+      "transmission": "Manual",
+      "capacity": "7 Orang",
+      "fuel": "Bensin",
+      "year": "2023",
+      "mileage": "12k Km",
+      "insurance": "Tersedia",
+      "facilities": [
+        "AC Dingin",
+        "Audio System",
+        "Bluetooth",
+        "USB Charger",
+        "GPS Ready"
+      ],
+      "reviews": [
+        {
+          "name": "Sari Indah",
+          "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&h=64&q=80",
+          "timeAgo": "2 hari yang lalu",
+          "rating": 5,
+          "text": "Mobil sangat bersih dan terawat. Pelayanan admin lewat WA sangat cepat dan membantu. Sangat recommended!"
+        },
+        {
+          "name": "Budi Santoso",
+          "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=64&h=64&q=80",
+          "timeAgo": "1 minggu yang lalu",
+          "rating": 4,
+          "text": "Kondisi mesin prima untuk perjalanan jauh ke Bandung. AC dingin banget. Mantap pokoknya."
+        }
+      ]
+    }
+  ]
+}
