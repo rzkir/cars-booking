@@ -21,10 +21,6 @@ function decodeJWT(token: string) {
 const publicPaths = [
   "/signin",
   "/signup",
-  "/verification",
-  "/change-password",
-  "/forget-password",
-  "/reset-password",
   "/daftar-mobil",
   "/daftar-mobil/:slug",
   "/tentang",
@@ -97,7 +93,7 @@ export default function proxy(request: NextRequest) {
     }
 
     // Redirect based on role
-    if (userRole === "admins") {
+    if (userRole === "admin") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     } else {
       return NextResponse.redirect(new URL("/", request.url));
@@ -112,22 +108,13 @@ export default function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/admins/") || pathname.match(/^\/[a-f0-9]{24}$/)) {
-    return NextResponse.next();
-  }
-
-  if (
-    pathname.startsWith("/license-agreement") ||
-    pathname.startsWith("/privacy-policy") ||
-    pathname.startsWith("/refund-policy") ||
-    pathname.startsWith("/terms-of-service")
-  ) {
+  if (pathname.startsWith("/admin/") || pathname.match(/^\/[a-f0-9]{24}$/)) {
     return NextResponse.next();
   }
 
   const isExplicitlyPublicContent =
     pathname.startsWith("/daftar-mobil/") ||
-    pathname.startsWith("/admins/") ||
+    pathname.startsWith("/admin/") ||
     pathname.match(/^\/[a-f0-9]{24}$/);
 
   if (!isPublicPath && !isAuthenticated && !isExplicitlyPublicContent) {
@@ -139,7 +126,7 @@ export default function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/signin", request.url));
     }
 
-    if (userRole !== "admins") {
+    if (userRole !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
 

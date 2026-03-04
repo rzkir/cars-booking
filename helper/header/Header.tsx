@@ -48,7 +48,7 @@ export default function Header() {
           <Link
             href="/tracking-pemesanan"
             id="header-cta"
-            className="rounded-full font-bold text-sm text-gray-600"
+            className="rounded-full font-bold text-sm text-gray-600 underline"
           >
             Tracking Pemesanan
           </Link>
