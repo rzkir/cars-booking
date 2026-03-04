@@ -108,5 +108,37 @@
         }
       ]
     }
+  ],
+  "tracking_statuses": [
+    {
+      "status": "pending",
+      "title": "Menunggu Pembayaran",
+      "message": "Pesanan Anda sudah kami terima, silakan selesaikan pembayaran sebelum batas waktu yang ditentukan.",
+      "badgeLabel": "Menunggu Bayar"
+    },
+    {
+      "status": "confirmed",
+      "title": "Booking Terkonfirmasi",
+      "message": "Pembayaran Anda telah kami terima dan booking sedang dijadwalkan oleh tim kami.",
+      "badgeLabel": "Terkonfirmasi"
+    },
+    {
+      "status": "ongoing",
+      "title": "Perjalanan Berlangsung",
+      "message": "Unit sedang digunakan sesuai jadwal sewa. Nikmati perjalanan Anda bersama DriveEase.",
+      "badgeLabel": "Sedang Berjalan"
+    },
+    {
+      "status": "done",
+      "title": "Sewa Selesai",
+      "message": "Terima kasih! Pesanan Anda telah selesai dan pembayaran sudah lunas.",
+      "badgeLabel": "Selesai"
+    },
+    {
+      "status": "cancelled",
+      "title": "Booking Dibatalkan",
+      "message": "Pesanan ini telah dibatalkan. Hubungi admin jika Anda merasa ini sebuah kesalahan.",
+      "badgeLabel": "Dibatalkan"
+    }
   ]
 }

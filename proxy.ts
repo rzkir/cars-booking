@@ -29,6 +29,7 @@ const publicPaths = [
   "/daftar-mobil/:slug",
   "/tentang",
   "/kontak",
+  "/tracking-pemesanan",
 ];
 
 const adminPaths = ["/dashboard"];
@@ -104,6 +105,10 @@ export default function proxy(request: NextRequest) {
   }
 
   if (pathname.startsWith("/daftar-mobil/")) {
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/tracking-pemesanan/")) {
     return NextResponse.next();
   }
 

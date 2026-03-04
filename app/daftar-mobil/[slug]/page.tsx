@@ -20,24 +20,77 @@ import {
 } from "lucide-react";
 
 import carsData from "@/helper/data/data.json";
+import type { Metadata } from "next";
 
 type CarDetailParams = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
-export default function Page({ params }: CarDetailParams) {
-  const car = carsData.cars.find((c) => c.slug === params.slug);
-  const detail = carsData.cars_details.find((d) => d.slug === params.slug);
+export async function generateMetadata({
+  params,
+}: CarDetailParams): Promise<Metadata> {
+  const { slug } = await params;
+  const detail = carsData.cars_details.find((d) => d.slug === slug);
+
+  if (!detail) {
+    return {
+      title: "Mobil tidak ditemukan | Cars Booking",
+      description: "Mobil yang Anda cari tidak ditemukan di Cars Booking.",
+    };
+  }
+
+  return {
+    title: `${detail.name} | Sewa Mobil di Cars Booking`,
+    description: detail.tagline,
+    openGraph: {
+      title: `${detail.name} | Sewa Mobil di Cars Booking`,
+      description: detail.tagline,
+      images: [detail.heroImage],
+    },
+  };
+}
+
+export default async function Page({ params }: CarDetailParams) {
+  const { slug } = await params;
+
+  const car = carsData.cars.find((c) => c.slug === slug);
+  const detail = carsData.cars_details.find((d) => d.slug === slug);
 
   if (!car || !detail) {
     return (
-      <main className="pt-32 pb-20">
-        <div className="container mx-auto px-6">
-          <p className="text-lg font-bold text-gray-500">
-            Mobil tidak ditemukan.
-          </p>
+      <main className="pt-32 pb-20 min-h-screen flex items-center justify-center">
+        <div className="container mx-auto px-6 flex items-center justify-center">
+          <div className="max-w-xl w-full bg-white rounded-3xl border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.06)] px-8 py-10 text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-orange-50 text-[#FF9500] mb-2">
+              <Info className="w-7 h-7" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl md:text-3xl font-black">
+                Mobil tidak ditemukan
+              </h1>
+              <p className="text-sm md:text-base text-gray-500">
+                Maaf, kami tidak menemukan mobil dengan link atau slug yang Anda
+                akses. Coba kembali ke daftar mobil dan pilih unit lainnya.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
+              <Link
+                href="/daftar-mobil"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#1a1a1a] text-white text-sm font-black hover:bg-black transition-colors"
+              >
+                Lihat Daftar Mobil
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Kembali ke Beranda
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
     );
@@ -141,7 +194,7 @@ export default function Page({ params }: CarDetailParams) {
                             <Star key={i} className="w-4 h-4 fill-[#FF9500]" />
                           ) : (
                             <StarOff key={i} className="w-4 h-4" />
-                          )
+                          ),
                         )}
                       </div>
                       <p className="text-gray-500 text-sm leading-relaxed italic">
@@ -198,7 +251,11 @@ export default function Page({ params }: CarDetailParams) {
                 label="Transmisi"
                 value={detail.transmission}
               />
-              <SpecCard icon={Users} label="Kapasitas" value={detail.capacity} />
+              <SpecCard
+                icon={Users}
+                label="Kapasitas"
+                value={detail.capacity}
+              />
               <SpecCard icon={Fuel} label="Bahan Bakar" value={detail.fuel} />
               <SpecCard icon={Calendar} label="Tahun" value={detail.year} />
               <SpecCard icon={Gauge} label="Mileage" value={detail.mileage} />
@@ -218,12 +275,12 @@ export default function Page({ params }: CarDetailParams) {
                     facility === "AC Dingin"
                       ? Snowflake
                       : facility === "Audio System"
-                      ? Music2
-                      : facility === "Bluetooth"
-                      ? Radio
-                      : facility === "USB Charger"
-                      ? BatteryCharging
-                      : Navigation;
+                        ? Music2
+                        : facility === "Bluetooth"
+                          ? Radio
+                          : facility === "USB Charger"
+                            ? BatteryCharging
+                            : Navigation;
 
                   const IconComp = icon;
 
@@ -319,9 +376,7 @@ function SpecCard({ icon: Icon, label, value }: SpecCardProps) {
   return (
     <div className="p-4 bg-white border border-gray-100 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] flex flex-col items-center text-center gap-2">
       <Icon className="text-gray-400 w-6 h-6" />
-      <span className="text-xs font-bold text-gray-400 uppercase">
-        {label}
-      </span>
+      <span className="text-xs font-bold text-gray-400 uppercase">{label}</span>
       <span className="font-black">{value}</span>
     </div>
   );

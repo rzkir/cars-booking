@@ -44,13 +44,23 @@ export default function Header() {
           </Link>
         </div>
 
-        <a
-          href="https://wa.me/"
-          id="header-cta"
-          className="bg-[#1a1a1a] text-white px-6 py-3 rounded-full font-bold text-sm transition-transform"
-        >
-          Booking Sekarang
-        </a>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/tracking-pemesanan"
+            id="header-cta"
+            className="rounded-full font-bold text-sm text-gray-600"
+          >
+            Tracking Pemesanan
+          </Link>
+
+          <Link
+            href="/signin"
+            id="header-cta"
+            className="bg-[#1a1a1a] text-white px-6 py-3 rounded-full font-bold text-sm transition-transform"
+          >
+            Booking Sekarang
+          </Link>
+        </div>
       </nav>
     </header>
   );
