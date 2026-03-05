@@ -3,7 +3,6 @@
 import * as React from "react"
 import {
   BookOpen,
-  Bot,
   Command,
   Frame,
   LifeBuoy,
@@ -12,6 +11,7 @@ import {
   Send,
   Settings2,
   SquareTerminal,
+  Car,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -56,13 +56,13 @@ const data = {
       ],
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
+      title: "Cars",
+      url: "/dashboard/cars",
+      icon: Car,
       items: [
         {
-          title: "Genesis",
-          url: "#",
+          title: "List Cars",
+          url: "/dashboard/cars",
         },
         {
           title: "Explorer",
