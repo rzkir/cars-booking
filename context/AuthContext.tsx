@@ -2,11 +2,30 @@
 
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 
-import { useRouter } from "next/navigation";
-
 import { toast } from "sonner";
 
 import { API_CONFIG } from "@/lib/config";
+
+/** Normalisasi role seperti di be: hanya "admin" (case-insensitive) = admin, selain itu customer */
+function normalizeRole(role: unknown): "admin" | "customer" {
+  return String(role ?? "").toLowerCase() === "admin" ? "admin" : "customer";
+}
+
+function accountToUser(
+  account: Record<string, unknown> | null,
+): Accounts | null {
+  if (!account || !account.id) return null;
+  const role = normalizeRole(account.role);
+  return {
+    id: String(account.id),
+    name: String(account.name ?? ""),
+    email: String(account.email ?? ""),
+    phone: String(account.phone ?? ""),
+    role: role as UserRole,
+    created_at: String(account.created_at ?? ""),
+    updated_at: String(account.updated_at ?? ""),
+  };
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -32,145 +51,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [signupIsLoading, setSignupIsLoading] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
-    // Check for existing JWT token and fetch user data
     const initializeAuth = async () => {
-      // Ensure we're in the browser (not SSR)
       if (typeof window === "undefined") {
         setLoading(false);
         return;
       }
 
-      // Since the cookie is httpOnly, we can't read it directly
-      // Instead, we'll make an API call to check if the user is authenticated
+      const apiUrl = API_CONFIG.ENDPOINTS.session;
+      if (!apiUrl?.trim()) {
+        setUser(null);
+        setUserRole(null);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const apiUrl = API_CONFIG.ENDPOINTS.me;
-
-        if (!apiUrl || apiUrl.trim() === "") {
-          setLoading(false);
-          return;
-        }
-
-        const userResponse = await fetch(apiUrl, {
+        const res = await fetch(apiUrl, {
           method: "GET",
           credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${API_CONFIG.SECRET}`,
-          },
-        }).catch(() => {
-          // Handle network errors
-          // Don't throw - just set user to null and continue
-          return null;
-        });
+          headers: { "Content-Type": "application/json" },
+        }).catch(() => null);
 
-        // If fetch failed, userResponse will be null
-        if (!userResponse) {
+        if (!res || !res.ok) {
           setUser(null);
           setUserRole(null);
           setLoading(false);
           return;
         }
 
-        if (!userResponse.ok) {
-          // Handle rate limit errors
-          if (userResponse.status === 429) {
-            toast.error("Terlalu banyak permintaan. Silakan coba lagi nanti.");
-            setUser(null);
-            setUserRole(null);
-            setLoading(false);
-            return;
-          }
-
-          // If response is not OK, check if it's JSON before parsing
-          const contentType = userResponse.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            try {
-              await userResponse.json();
-            } catch {
-              // Ignore parse errors for non-JSON responses
-            }
-          }
-          // Not authenticated - this is normal, not an error
+        const contentType = res.headers.get("content-type");
+        if (!contentType?.includes("application/json")) {
           setUser(null);
           setUserRole(null);
           setLoading(false);
           return;
         }
 
-        // Check content type before parsing JSON
-        const contentType = userResponse.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
+        const data = await res.json();
+        if (data.error) {
           setUser(null);
           setUserRole(null);
           setLoading(false);
           return;
         }
 
-        const userResponseData = await userResponse.json();
-
-        if (userResponseData.error) {
+        const accountUser = accountToUser(data.account ?? data.user);
+        if (accountUser) {
+          setUser(accountUser);
+          setUserRole(accountUser.role as UserRole);
+        } else {
           setUser(null);
           setUserRole(null);
-          setLoading(false);
-          return;
         }
-
-        // The API returns user data directly, not wrapped in a data property
-        const account = userResponseData;
-
-        // Validate account status and verification on initialization
-        if (account.status === "inactive") {
-          // Account is inactive, sign out the user
-          setUser(null);
-          setUserRole(null);
-          // Clear cookie by calling signout
-          try {
-            await fetch(API_CONFIG.ENDPOINTS.signOut, {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${API_CONFIG.SECRET}`,
-              },
-            });
-          } catch {
-            // Ignore signout errors
-          }
-          setLoading(false);
-          return;
-        }
-
-        // Check isVerified (can be string "true"/"false" or boolean)
-        const isVerified =
-          account.isVerified === "true" || account.isVerified === true;
-        if (!isVerified) {
-          // Account is not verified, sign out the user
-          setUser(null);
-          setUserRole(null);
-          // Clear cookie by calling signout
-          try {
-            await fetch(API_CONFIG.ENDPOINTS.signOut, {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${API_CONFIG.SECRET}`,
-              },
-            });
-          } catch {
-            // Ignore signout errors
-          }
-          setLoading(false);
-          return;
-        }
-
-        setUser(account);
-        setUserRole(account.role);
       } catch {
-        // Error occurred while fetching user data
         setUser(null);
         setUserRole(null);
       } finally {
@@ -185,9 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const result = await fetch(API_CONFIG.ENDPOINTS.signIn, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ email, password }),
       });
@@ -196,39 +129,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!result.ok) {
         const message =
-          (resultData &&
-            ((resultData.detail as string) ||
-              (resultData.message as string))) ||
-          "Email atau password salah";
+          (resultData?.error as string) || "Email atau password salah";
         toast.error(message);
         return;
       }
 
-      const profile = resultData?.user;
-
-      if (!profile) {
+      const accountData = resultData?.account ?? resultData?.user;
+      if (!accountData) {
         toast.error("Data pengguna tidak ditemukan");
         return;
       }
 
-      const account: Accounts = {
-        id: profile.id,
-        name: profile.name,
-        email: profile.email,
-        phone: profile.phone,
-        role: profile.role === "admin" ? "admin" : "customer",
-        created_at: profile.created_at,
-        updated_at: profile.updated_at,
-      };
+      const account = accountToUser(accountData);
+      if (!account) {
+        toast.error("Data pengguna tidak valid");
+        return;
+      }
 
       setUser(account);
-      setUserRole(account.role);
+      setUserRole(account.role as UserRole);
 
-      toast.success("Berhasil masuk", {
-        duration: 2000,
-      });
+      toast.success("Berhasil masuk", { duration: 2000 });
 
-      router.push("/");
+      // Redirect ditangani proxy (admin → /dashboard, customer → /)
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
 
       return account;
     } catch (error: unknown) {
@@ -236,7 +162,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         error instanceof Error
           ? error.message
           : "Terjadi kesalahan saat login. Silakan coba lagi.";
-
       toast.error(errorMessage);
       return;
     }
@@ -247,87 +172,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await fetch(API_CONFIG.ENDPOINTS.signOut, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_CONFIG.SECRET}`,
-        },
+        headers: { "Content-Type": "application/json" },
       });
-
-      // Clear local state
-      setUser(null);
-      setUserRole(null);
-
-      toast.success("Logged out successfully!", {
-        duration: 2000,
-      });
-
-      // Redirect manually to signin page with logout parameter
-      router.push("/signin?logout=true");
     } catch {
-      // Clear local state even if API calls fail
-      setUser(null);
-      setUserRole(null);
-
-      // Try again to ensure server-side logout
-      try {
-        await fetch(API_CONFIG.ENDPOINTS.signOut, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${API_CONFIG.SECRET}`,
-          },
-        });
-      } catch {
-        // Ignore errors
-      }
-
-      toast.success("Logged out successfully!", {
-        duration: 2000,
-      });
-
-      // Redirect manually to signin page with logout parameter
-      router.push("/signin?logout=true");
+      // ignore
     }
+    setUser(null);
+    setUserRole(null);
+    toast.success("Berhasil keluar", { duration: 2000 });
+    // Redirect ditangani proxy
+    if (typeof window !== "undefined")
+      window.location.href = "/signin?logout=true";
   };
 
   const refreshUserData = async (): Promise<Accounts | null> => {
+    const apiUrl = API_CONFIG.ENDPOINTS.session;
+    if (!apiUrl) return null;
     try {
-      const response = await fetch(API_CONFIG.ENDPOINTS.me, {
+      const res = await fetch(apiUrl, {
         method: "GET",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_CONFIG.SECRET}`,
-        },
+        headers: { "Content-Type": "application/json" },
       });
-
-      // Check content type before parsing JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        return null;
+      if (!res.ok) return null;
+      const contentType = res.headers.get("content-type");
+      if (!contentType?.includes("application/json")) return null;
+      const data = await res.json();
+      if (data.error) return null;
+      const accountUser = accountToUser(data.account ?? data.user);
+      if (accountUser) {
+        setUser(accountUser);
+        setUserRole(accountUser.role as UserRole);
+        return accountUser;
       }
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        // Handle rate limit errors silently (don't show toast on refresh)
-        if (response.status === 429) {
-          // Just return null without showing error toast
-          return null;
-        }
-        if (responseData.error) {
-          return null;
-        }
-        return null;
-      }
-
-      // The API returns user data directly, not wrapped in a data property
-      const account = responseData;
-      setUser(account);
-      setUserRole(account.role);
-
-      return account;
+      return null;
     } catch {
       return null;
     }
@@ -419,35 +297,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch(API_CONFIG.ENDPOINTS.signUp, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          phone,
-          password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phone, password }),
       });
 
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
         const message =
-          (data && ((data.detail as string) || (data.message as string))) ||
-          "Pendaftaran gagal, silakan coba lagi";
+          (data?.error as string) || "Pendaftaran gagal, silakan coba lagi";
         toast.error(message);
         return;
       }
 
+      const accountData = data?.account ?? data?.user;
+      if (accountData) {
+        const account = accountToUser(accountData);
+        if (account) {
+          setUser(account);
+          setUserRole(account.role as UserRole);
+          toast.success("Pendaftaran berhasil");
+          resetSignupState();
+          // Redirect ditangani proxy (admin → /dashboard, customer → /)
+          if (typeof window !== "undefined") window.location.href = "/";
+          return;
+        }
+      }
+
       toast.success(
-        (data && (data.message as string)) ||
+        (data?.message as string) ||
           "Pendaftaran berhasil, silakan signin untuk melanjutkan",
       );
-
       resetSignupState();
-      // Setelah signup berhasil, arahkan ke halaman signin
-      router.push("/signin");
+      if (typeof window !== "undefined") window.location.href = "/signin";
     } catch {
       toast.error("Terjadi kesalahan jaringan, silakan coba lagi");
     } finally {

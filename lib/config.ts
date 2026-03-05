@@ -5,17 +5,11 @@ const API_SECRET = process.env.NEXT_PUBLIC_API_SECRET;
 export const API_CONFIG = {
   ENDPOINTS: {
     base: API_BASE_URL,
-    // Auth endpoints (disesuaikan jika nanti kamu buat route Cloudflare/Hono)
-    signIn: `${API_BASE_URL}/auth/signin`,
-    signUp: `${API_BASE_URL}/auth/signup`,
-    signOut: `${API_BASE_URL}/auth/signout`,
-    verification: `${API_BASE_URL}/auth/verification`,
-    resetPassword: `${API_BASE_URL}/auth/reset-password`,
-    forgetPassword: `${API_BASE_URL}/auth/forget-password`,
-    changePassword: `${API_BASE_URL}/auth/change-password`,
-    deleteAccount: `${API_BASE_URL}/auth/delete-account`,
-    me: `${API_BASE_URL}/auth/me`,
-    uploadPicture: `${API_BASE_URL}/auth/upload-picture`,
+    // Auth endpoints (Hono backend: /api/auth/*)
+    signIn: `${API_BASE_URL}/api/auth/signin`,
+    signUp: `${API_BASE_URL}/api/auth/signup`,
+    signOut: `${API_BASE_URL}/api/auth/logout`,
+    session: `${API_BASE_URL}/api/auth/session`,
     products: {
       base: `${API_BASE_URL}/products`,
       categories: `${API_BASE_URL}/products/categories`,

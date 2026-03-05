@@ -3,12 +3,15 @@ interface Accounts {
   name: string;
   email: string;
   phone: string;
-  role: "customer" | "admin";
+  role: UserRole;
   created_at: string;
   updated_at: string;
 }
 
-type UserRole = Accounts["role"];
+enum UserRole {
+  CUSTOMER = "customer",
+  ADMIN = "admin",
+}
 
 interface AuthContextType {
   user: Accounts | null;

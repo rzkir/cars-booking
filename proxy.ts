@@ -2,21 +2,7 @@ import { NextResponse } from "next/server";
 
 import type { NextRequest } from "next/server";
 
-function decodeJWT(token: string) {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) {
-      throw new Error("Invalid token format");
-    }
-
-    const payload = parts[1];
-    const paddedPayload = payload + "=".repeat((4 - (payload.length % 4)) % 4);
-    const decodedPayload = atob(paddedPayload);
-    return JSON.parse(decodedPayload);
-  } catch {
-    throw new Error("Invalid token");
-  }
-}
+import { API_CONFIG } from "@/lib/config";
 
 const publicPaths = [
   "/signin",
@@ -30,14 +16,61 @@ const publicPaths = [
 
 const adminPaths = ["/dashboard"];
 
-export default function proxy(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
+/** Nama cookie session dari backend (be: session_token, httpOnly) */
+const SESSION_COOKIE_NAME = "session_token";
+
+// Ambil status login & role dengan memanggil backend /api/auth/session
+async function getAuthFromSessionCookie(request: NextRequest): Promise<{
+  isAuthenticated: boolean;
+  userRole: string | null;
+}> {
+  const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!sessionToken) {
+    return { isAuthenticated: false, userRole: null };
+  }
+
+  try {
+    const apiUrl = API_CONFIG.ENDPOINTS.session;
+
+    const res = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        // Teruskan semua cookie dari request user ke backend
+        cookie: request.headers.get("cookie") ?? "",
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      return { isAuthenticated: false, userRole: null };
+    }
+
+    const data = (await res.json()) as {
+      account?: { role?: string | null } | null;
+      user?: { role?: string | null } | null;
+    };
+
+    const rawRole = data.account?.role ?? data.user?.role ?? null;
+    if (!rawRole) {
+      return { isAuthenticated: true, userRole: null };
+    }
+
+    const userRole =
+      typeof rawRole === "string" && rawRole.toLowerCase() === "admin"
+        ? "admin"
+        : "customer";
+
+    return { isAuthenticated: true, userRole };
+  } catch {
+    // Kalau parsing / fetch gagal, anggap sudah login tapi role tidak diketahui
+    return { isAuthenticated: true, userRole: null };
+  }
+}
+
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method;
-
-  if (pathname.startsWith("/api/") || pathname === "/api") {
-    return NextResponse.next();
-  }
 
   // Allow public access to sitemap.xml and robots.txt
   if (pathname === "/sitemap.xml" || pathname === "/robots.txt") {
@@ -53,28 +86,8 @@ export default function proxy(request: NextRequest) {
 
   const isAdminPath = adminPaths.some((path) => pathname.startsWith(path));
 
-  let userRole: string | null = null;
-  let isAuthenticated = false;
+  const { isAuthenticated, userRole } = await getAuthFromSessionCookie(request);
 
-  if (token) {
-    try {
-      const decoded = decodeJWT(token);
-
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (decoded.exp && decoded.exp < currentTime) {
-        throw new Error("Token expired");
-      }
-
-      userRole = decoded.role as string;
-      isAuthenticated = true;
-    } catch {
-      const response = NextResponse.next();
-      response.cookies.delete("token");
-      return response;
-    }
-  }
-
-  // Redirect authenticated users away from auth pages
   // Also check for query parameter from client-side redirect
   const redirectParam = request.nextUrl.searchParams.get("redirect");
   if (
@@ -84,20 +97,25 @@ export default function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(redirectParam, request.url));
   }
 
+  // Authenticated: admin → /dashboard, customer → / (when on root or auth pages)
+  if (isAuthenticated && pathname === "/") {
+    if (userRole === "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    // Customer stays on home
+    return NextResponse.next();
+  }
+
   if (isAuthenticated && (pathname === "/signin" || pathname === "/signup")) {
     const fromLogout = request.nextUrl.searchParams.get("logout");
-
-    // Allow access if explicitly logging out
     if (fromLogout) {
       return NextResponse.next();
     }
-
-    // Redirect based on role
+    // Admin → /dashboard, customer → /
     if (userRole === "admin") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
-    } else {
-      return NextResponse.redirect(new URL("/", request.url));
     }
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (pathname.startsWith("/daftar-mobil/")) {
@@ -125,11 +143,10 @@ export default function proxy(request: NextRequest) {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL("/signin", request.url));
     }
-
+    // Customer akses /dashboard → redirect ke /
     if (userRole !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
-
     return NextResponse.next();
   }
 

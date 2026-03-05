@@ -12,7 +12,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Pathname>{children}</Pathname>
+          <Pathname>{children}</Pathname>
       </AuthProvider>
     </QueryClientProvider>
   );
