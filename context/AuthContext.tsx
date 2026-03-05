@@ -29,10 +29,22 @@ function accountToUser(
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<Accounts | null>(null);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({
+  children,
+  initialSession,
+}: {
+  children: React.ReactNode;
+  /** Session dari SSR (getSession di layout). Jika ada, client tidak memanggil GET /api/auth/session. */
+  initialSession?: Accounts | null;
+}) {
+  const sessionFromServer = initialSession !== undefined;
+  const [user, setUser] = useState<Accounts | null>(
+    sessionFromServer ? (initialSession ?? null) : null,
+  );
+  const [userRole, setUserRole] = useState<UserRole | null>(
+    sessionFromServer && initialSession ? (initialSession.role as UserRole) : null,
+  );
+  const [loading, setLoading] = useState(!sessionFromServer);
 
   const userRef = useRef(user);
   useEffect(() => {
@@ -53,6 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [signupIsLoading, setSignupIsLoading] = useState(false);
 
   useEffect(() => {
+    if (sessionFromServer) return;
+
     const initializeAuth = async () => {
       if (typeof window === "undefined") {
         setLoading(false);
@@ -114,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initializeAuth();
-  }, []);
+  }, [sessionFromServer]);
 
   const signIn = async (email: string, password: string) => {
     try {

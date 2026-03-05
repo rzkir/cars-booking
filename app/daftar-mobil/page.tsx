@@ -9,7 +9,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-import { CarCard } from "@/components/ui/card";
+import { CarCard } from "@/components/ui/cars/card";
 
 import carsData from "@/helper/data/data.json";
 

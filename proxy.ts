@@ -97,12 +97,8 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(redirectParam, request.url));
   }
 
-  // Authenticated: admin → /dashboard, customer → / (when on root or auth pages)
+  // Authenticated on home: semua role (admin & customer) boleh tetap di /
   if (isAuthenticated && pathname === "/") {
-    if (userRole === "admin") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-    // Customer stays on home
     return NextResponse.next();
   }
 

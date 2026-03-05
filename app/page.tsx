@@ -8,7 +8,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-import { CarCard } from "@/components/ui/card";
+import { CarCard } from "@/components/ui/cars/card";
 
 import Image from "next/image";
 

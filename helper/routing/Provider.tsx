@@ -8,10 +8,16 @@ import Pathname from "@/helper/routing/Pathname";
 
 const queryClient = new QueryClient();
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({
+  children,
+  initialSession,
+}: {
+  children: React.ReactNode;
+  initialSession: Accounts | null;
+}) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <AuthProvider initialSession={initialSession}>
           <Pathname>{children}</Pathname>
       </AuthProvider>
     </QueryClientProvider>
