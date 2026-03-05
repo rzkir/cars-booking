@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+
 import { Plus, Pencil, Trash2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+
 import {
   Table,
   TableBody,
@@ -11,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
 import {
   Empty,
   EmptyHeader,
@@ -18,10 +22,12 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty";
+
 import { useCarsQuery, useDeleteCarMutation } from "@/services/useStateCars";
 
 export default function CarsPage() {
-  const { data: cars = [], isLoading } = useCarsQuery();
+  const { data, isLoading } = useCarsQuery();
+  const cars = data?.data ?? [];
   const deleteMutation = useDeleteCarMutation();
 
   const handleDelete = async (id: string, name: string) => {
@@ -83,7 +89,7 @@ export default function CarsPage() {
                 <TableHead>Transmisi</TableHead>
                 <TableHead>Kapasitas</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-[100px]">Aksi</TableHead>
+                <TableHead className="w-[140px]">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -94,7 +100,44 @@ export default function CarsPage() {
                     {car.slug}
                   </TableCell>
                   <TableCell>
-                    Rp {car.price_per_day.toLocaleString("id-ID")}
+                    {(() => {
+                      const selfDrive = car.car_pricings?.find(
+                        (p) => p.type === "self_drive",
+                      );
+                      const withDriver = car.car_pricings?.find(
+                        (p) => p.type === "with_driver",
+                      );
+
+                      const baseSelf =
+                        selfDrive?.price_per_day ?? car.price_per_day;
+                      const baseWith =
+                        withDriver?.price_per_day ??
+                        car.price_with_driver_per_day ??
+                        null;
+
+                      return (
+                        <div className="space-y-1 text-xs sm:text-sm">
+                          <div>
+                            <span className="text-muted-foreground">
+                              Lepas kunci:
+                            </span>{" "}
+                            <span className="font-medium">
+                              Rp {baseSelf.toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          {baseWith && (
+                            <div>
+                              <span className="text-muted-foreground">
+                                Dengan supir:
+                              </span>{" "}
+                              <span className="font-medium">
+                                Rp {baseWith.toLocaleString("id-ID")}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell className="capitalize">
                     {car.transmission}

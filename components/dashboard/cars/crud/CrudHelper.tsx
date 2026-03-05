@@ -1,0 +1,797 @@
+"use client";
+
+import React, { useRef, useState } from "react";
+
+import Image from "next/image";
+
+import Link from "next/link";
+
+import {
+  BadgeCheck,
+  Calendar,
+  Car,
+  CircleDollarSign,
+  FileText,
+  Fuel,
+  Gauge,
+  Image as ImageIcon,
+  ListChecks,
+  Plus,
+  Settings2,
+  Star,
+  Tag,
+  Trash2,
+  Users,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+
+import { Input } from "@/components/ui/input";
+
+import { Textarea } from "@/components/ui/textarea";
+
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import {
+  useCarImagesQuery,
+  useAddCarImageMutation,
+  useDeleteCarImageMutation,
+  useSetPrimaryCarImageMutation,
+  useUpdateCarImageMutation,
+  uploadCarImage,
+} from "@/services/useStateCars";
+
+export const emptyForm = {
+  name: "",
+  slug: "",
+  description: "",
+  price_per_day: "",
+  price_with_driver_per_day: "",
+  transmission: "manual" as "manual" | "matic",
+  capacity: "",
+  fuel_type: "",
+  year: "",
+  rental_type: "self_drive" as "self_drive" | "with_driver",
+  facilities: "",
+  status: "available" as "available" | "rented" | "maintenance",
+};
+
+export function carToForm(car: Car) {
+  return {
+    name: car.name,
+    slug: car.slug,
+    description: car.description ?? "",
+    price_per_day: String(car.price_per_day),
+    price_with_driver_per_day:
+      car.price_with_driver_per_day != null
+        ? String(car.price_with_driver_per_day)
+        : "",
+    transmission: car.transmission,
+    capacity: String(car.capacity),
+    fuel_type: car.fuel_type ?? "",
+    year: car.year != null ? String(car.year) : "",
+    rental_type: car.rental_type,
+    facilities: car.facilities?.join(", ") ?? "",
+    status: car.status,
+  };
+}
+
+export function CarFormInner({
+  initialForm,
+  isNew,
+  onSubmit,
+  isPending,
+  imagesSection,
+}: {
+  initialForm: typeof emptyForm;
+  isNew: boolean;
+  onSubmit: (payload: CarCreateInput) => Promise<void>;
+  isPending: boolean;
+  imagesSection?: React.ReactNode;
+}) {
+  const [form, setForm] = useState(initialForm);
+
+  const autoSlug = () => {
+    const s = form.name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    setForm((prev) => ({ ...prev, slug: s }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const yearValue = form.year.trim();
+    const facilitiesArray = form.facilities
+      .split(",")
+      .map((f) => f.trim())
+      .filter(Boolean);
+
+    const payload = {
+      name: form.name.trim(),
+      slug: form.slug.trim() || undefined,
+      description: form.description.trim() || undefined,
+      price_per_day: Number(form.price_per_day),
+      price_with_driver_per_day: form.price_with_driver_per_day.trim()
+        ? Number(form.price_with_driver_per_day.trim())
+        : undefined,
+      transmission: form.transmission,
+      capacity: Number(form.capacity),
+      fuel_type: form.fuel_type.trim() || undefined,
+      year: yearValue ? Number(yearValue) : undefined,
+      rental_type: form.rental_type as "self_drive" | "with_driver",
+      facilities: facilitiesArray.length > 0 ? facilitiesArray : undefined,
+      status: form.status,
+    };
+    await onSubmit(payload);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Field>
+          <FieldLabel htmlFor="name">
+            <Car className="h-4 w-4" />
+            Nama *
+          </FieldLabel>
+          <Input
+            id="name"
+            value={form.name}
+            onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+            onBlur={isNew ? autoSlug : undefined}
+            placeholder="Contoh: Toyota Avanza"
+            required
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="slug">
+            <Tag className="h-4 w-4" />
+            Slug
+          </FieldLabel>
+          <Input
+            id="slug"
+            value={form.slug}
+            placeholder="toyota-avanza (otomatis dari nama)"
+            readOnly
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="status">
+            <BadgeCheck className="h-4 w-4" />
+            Status
+          </FieldLabel>
+          <Select
+            value={form.status}
+            onValueChange={(value) =>
+              setForm((p) => ({
+                ...p,
+                status: value as "available" | "rented" | "maintenance",
+              }))
+            }
+          >
+            <SelectTrigger id="status" className="w-full">
+              <SelectValue placeholder="Pilih status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="available">Tersedia</SelectItem>
+              <SelectItem value="rented">Disewa</SelectItem>
+              <SelectItem value="maintenance">Perawatan</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Field>
+          <FieldLabel htmlFor="rental_type">
+            <Settings2 className="h-4 w-4" />
+            Tipe Sewa Default
+          </FieldLabel>
+          <Select
+            value={form.rental_type}
+            onValueChange={(value) =>
+              setForm((p) => ({
+                ...p,
+                rental_type: value as "self_drive" | "with_driver",
+              }))
+            }
+          >
+            <SelectTrigger id="rental_type" className="w-full">
+              <SelectValue placeholder="Pilih tipe sewa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="self_drive">
+                Lepas Kunci (Self-drive)
+              </SelectItem>
+              <SelectItem value="with_driver">Dengan Supir</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="price_per_day">
+            <CircleDollarSign className="h-4 w-4" />
+            Harga / hari lepas kunci (Rp) *
+          </FieldLabel>
+          <Input
+            id="price_per_day"
+            type="number"
+            min={1}
+            value={form.price_per_day}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, price_per_day: e.target.value }))
+            }
+            required
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="price_with_driver_per_day">
+            <CircleDollarSign className="h-4 w-4" />
+            Harga / hari dengan supir (Rp)
+          </FieldLabel>
+          <Input
+            id="price_with_driver_per_day"
+            type="number"
+            min={1}
+            value={form.price_with_driver_per_day}
+            onChange={(e) =>
+              setForm((p) => ({
+                ...p,
+                price_with_driver_per_day: e.target.value,
+              }))
+            }
+            placeholder="Opsional"
+          />
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Field>
+          <FieldLabel htmlFor="capacity">
+            <Users className="h-4 w-4" />
+            Kapasitas (orang) *
+          </FieldLabel>
+          <Input
+            id="capacity"
+            type="number"
+            min={1}
+            value={form.capacity}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, capacity: e.target.value }))
+            }
+            required
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="transmission">
+            <Gauge className="h-4 w-4" />
+            Transmisi *
+          </FieldLabel>
+          <Select
+            value={form.transmission}
+            onValueChange={(value) =>
+              setForm((p) => ({
+                ...p,
+                transmission: value as "manual" | "matic",
+              }))
+            }
+          >
+            <SelectTrigger id="transmission" className="w-full">
+              <SelectValue placeholder="Pilih transmisi" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="manual">Manual</SelectItem>
+              <SelectItem value="matic">Matic</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="fuel_type">
+            <Fuel className="h-4 w-4" />
+            Jenis Bahan Bakar
+          </FieldLabel>
+          <Select
+            value={form.fuel_type || undefined}
+            onValueChange={(value) =>
+              setForm((p) => ({
+                ...p,
+                fuel_type: value,
+              }))
+            }
+          >
+            <SelectTrigger id="fuel_type" className="w-full">
+              <SelectValue placeholder="Pilih jenis bahan bakar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="bensin">Bensin</SelectItem>
+              <SelectItem value="solar">Solar</SelectItem>
+              <SelectItem value="listrik">Listrik</SelectItem>
+              <SelectItem value="hybrid">Hybrid</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Field>
+          <FieldLabel htmlFor="year">
+            <Calendar className="h-4 w-4" />
+            Tahun
+          </FieldLabel>
+          <Input
+            id="year"
+            type="number"
+            min={1900}
+            max={2100}
+            value={form.year}
+            onChange={(e) => setForm((p) => ({ ...p, year: e.target.value }))}
+            placeholder="Contoh: 2020"
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="facilities">
+            <ListChecks className="h-4 w-4" />
+            Fasilitas
+          </FieldLabel>
+          <Textarea
+            id="facilities"
+            value={form.facilities}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, facilities: e.target.value }))
+            }
+            placeholder="Contoh: AC, Bluetooth, Audio, Kursi bayi"
+            rows={2}
+          />
+          <FieldDescription className="text-xs text-muted-foreground">
+            Pisahkan fasilitas dengan koma.
+          </FieldDescription>
+        </Field>
+      </div>
+
+      <Field>
+        <FieldLabel htmlFor="description">
+          <FileText className="h-4 w-4" />
+          Deskripsi
+        </FieldLabel>
+        <Textarea
+          id="description"
+          value={form.description}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, description: e.target.value }))
+          }
+          placeholder="Deskripsi mobil..."
+          rows={3}
+        />
+      </Field>
+
+      {imagesSection}
+
+      <div className="flex gap-3 pt-4">
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Menyimpan..." : isNew ? "Tambah Mobil" : "Simpan"}
+        </Button>
+        <Button type="button" variant="outline" asChild>
+          <Link href="/dashboard/cars">Batal</Link>
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export function NewCarImagesSection({
+  files,
+  setFiles,
+  isPending,
+}: {
+  files: File[];
+  setFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  isPending: boolean;
+}) {
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextFiles = Array.from(e.target.files ?? []).filter((file) =>
+      file.type.startsWith("image/"),
+    );
+    if (nextFiles.length === 0) return;
+
+    setFiles((prev) => [...prev, ...nextFiles]);
+    setPreviews((prev) => [
+      ...prev,
+      ...nextFiles.map((file) => URL.createObjectURL(file)),
+    ]);
+
+    e.target.value = "";
+  };
+
+  const handlePreviewDragStart = (index: number) => {
+    setDraggingIndex(index);
+  };
+
+  const handlePreviewDragOver = (
+    e: React.DragEvent<HTMLDivElement>,
+    targetIndex: number,
+  ) => {
+    e.preventDefault();
+    if (draggingIndex === null || draggingIndex === targetIndex) return;
+
+    const currentFiles = [...files];
+    const fromIndex = draggingIndex;
+    const toIndex = targetIndex;
+    if (
+      fromIndex < 0 ||
+      fromIndex >= currentFiles.length ||
+      toIndex < 0 ||
+      toIndex >= currentFiles.length
+    ) {
+      return;
+    }
+
+    const [moved] = currentFiles.splice(fromIndex, 1);
+    currentFiles.splice(toIndex, 0, moved);
+
+    setFiles(currentFiles);
+    setPreviews((prev) => {
+      prev.forEach((url) => URL.revokeObjectURL(url));
+      return currentFiles.map((file) => URL.createObjectURL(file));
+    });
+
+    setDraggingIndex(toIndex);
+  };
+
+  const handleSetPrimary = (index: number) => {
+    setFiles((prev) => {
+      if (index <= 0 || index >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(index, 1);
+      next.unshift(moved);
+      return next;
+    });
+    setPreviews((prev) => {
+      if (index <= 0 || index >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(index, 1);
+      next.unshift(moved);
+      return next;
+    });
+  };
+
+  const handleRemove = (index: number) => {
+    setFiles((prev) => {
+      const next = [...prev];
+      if (index < 0 || index >= next.length) return prev;
+      next.splice(index, 1);
+      return next;
+    });
+    setPreviews((prev) => {
+      if (index < 0 || index >= prev.length) return prev;
+      URL.revokeObjectURL(prev[index]);
+      const next = [...prev];
+      next.splice(index, 1);
+      return next;
+    });
+  };
+
+  React.useEffect(() => {
+    return () => {
+      previews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previews]);
+
+  return (
+    <div className="space-y-4 rounded-lg border p-6">
+      <Field>
+        <FieldLabel htmlFor="new-images">
+          <ImageIcon className="h-4 w-4" />
+          Gambar Mobil
+        </FieldLabel>
+        <Input
+          id="new-images"
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleImageChange}
+          disabled={isPending}
+        />
+        {previews.length > 0 && (
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {previews.map((src, index) => (
+              <div
+                key={src}
+                draggable
+                onDragStart={() => handlePreviewDragStart(index)}
+                onDragOver={(e) => handlePreviewDragOver(e, index)}
+                onDragEnd={() => setDraggingIndex(null)}
+                className="relative aspect-video rounded-lg border bg-muted overflow-hidden cursor-move group"
+              >
+                <Image
+                  src={src}
+                  alt={`Preview {index + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 50vw, 25vw"
+                  unoptimized
+                />
+                {index === 0 && (
+                  <span className="absolute top-1 left-1 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                    Utama
+                  </span>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {index !== 0 && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleSetPrimary(index)}
+                      title="Jadikan utama"
+                    >
+                      <Star className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleRemove(index)}
+                    title="Hapus"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Field>
+    </div>
+  );
+}
+
+export function CarImagesSection({ carId }: { carId: string }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const { data: images = [], isLoading } = useCarImagesQuery(carId);
+  const [localImages, setLocalImages] = useState<CarImage[]>([]);
+  const previousImagesRef = React.useRef<CarImage[] | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const addMutation = useAddCarImageMutation(carId);
+  const deleteMutation = useDeleteCarImageMutation(carId);
+  const setPrimaryMutation = useSetPrimaryCarImageMutation(carId);
+  const updateImageMutation = useUpdateCarImageMutation(carId);
+
+  React.useEffect(() => {
+    const prev = previousImagesRef.current;
+
+    const isSame =
+      prev &&
+      prev.length === images.length &&
+      prev.every((img, index) => {
+        const next = images[index];
+        return (
+          img.id === next.id &&
+          img.image_url === next.image_url &&
+          img.is_primary === next.is_primary
+        );
+      });
+
+    if (isSame) {
+      return;
+    }
+
+    previousImagesRef.current = images;
+    setLocalImages(images);
+  }, [images]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []).filter((file) =>
+      file.type.startsWith("image/"),
+    );
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        const url = await uploadCarImage(carId, file);
+        const isFirst = images.length === 0 && index === 0;
+        await addMutation.mutateAsync({ image_url: url, is_primary: isFirst });
+      }
+    } catch {
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleDropUpload = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files ?? []).filter((file) =>
+      file.type.startsWith("image/"),
+    );
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        const url = await uploadCarImage(carId, file);
+        const isFirst = images.length === 0 && index === 0;
+        await addMutation.mutateAsync({ image_url: url, is_primary: isFirst });
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDragStart = (id: string) => {
+    setDraggingId(id);
+  };
+
+  const handleDragOverItem = (
+    e: React.DragEvent<HTMLDivElement>,
+    targetId: string,
+  ) => {
+    e.preventDefault();
+    if (!draggingId || draggingId === targetId) return;
+
+    setLocalImages((prev) => {
+      const current = [...prev];
+      const fromIndex = current.findIndex((img) => img.id === draggingId);
+      const toIndex = current.findIndex((img) => img.id === targetId);
+      if (fromIndex === -1 || toIndex === -1) return prev;
+
+      const [moved] = current.splice(fromIndex, 1);
+      current.splice(toIndex, 0, moved);
+      return current;
+    });
+  };
+
+  const handleDropReorder = async () => {
+    if (!draggingId || localImages.length === 0) {
+      setDraggingId(null);
+      return;
+    }
+
+    const currentOrder = localImages;
+    setDraggingId(null);
+
+    try {
+      await Promise.all(
+        currentOrder.map((img, index) =>
+          updateImageMutation.mutateAsync({
+            imageId: img.id,
+            payload: { position: index },
+          }),
+        ),
+      );
+    } catch {}
+  };
+
+  return (
+    <div className="space-y-4 rounded-lg border p-6">
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold">Gambar Mobil</h3>
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {uploading ? "Mengupload..." : "Tambah Gambar"}
+          </Button>
+        </div>
+      </div>
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Memuat gambar...</p>
+      ) : localImages.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Belum ada gambar. Klik &quot;Tambah Gambar&quot; atau drag &amp; drop
+          gambar ke area ini untuk mengupload.
+        </p>
+      ) : (
+        <div
+          className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 rounded-lg border-dashed ${
+            isDragOver
+              ? "border-2 border-primary bg-primary/5"
+              : "border border-transparent"
+          }`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragOver(true);
+          }}
+          onDragLeave={(e) => {
+            if ((e.target as HTMLElement).closest("[data-dropzone]")) return;
+            setIsDragOver(false);
+          }}
+          onDrop={handleDropUpload}
+          data-dropzone
+        >
+          {localImages.map((img) => (
+            <div
+              key={img.id}
+              draggable
+              onDragStart={() => handleDragStart(img.id)}
+              onDragOver={(e) => handleDragOverItem(e, img.id)}
+              onDrop={handleDropReorder}
+              onDragEnd={handleDropReorder}
+              className="relative aspect-video rounded-lg border bg-muted overflow-hidden group cursor-move"
+            >
+              <Image
+                src={img.image_url}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 50vw, 25vw"
+                unoptimized
+              />
+              {img.is_primary && (
+                <span className="absolute top-1 left-1 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  Utama
+                </span>
+              )}
+              <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                {!img.is_primary && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setPrimaryMutation.mutate(img.id)}
+                    disabled={setPrimaryMutation.isPending}
+                    title="Jadikan utama"
+                  >
+                    <Star className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    if (confirm("Hapus gambar?")) deleteMutation.mutate(img.id);
+                  }}
+                  disabled={deleteMutation.isPending}
+                  title="Hapus"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

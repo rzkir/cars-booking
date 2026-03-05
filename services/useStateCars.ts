@@ -6,34 +6,27 @@ import {
   useQueryClient,
   type UseMutationOptions,
 } from "@tanstack/react-query";
+
 import { toast } from "sonner";
+
 import { API_CONFIG } from "@/lib/config";
 
 export const carsKeys = {
   all: ["cars"] as const,
   lists: () => [...carsKeys.all, "list"] as const,
-  list: (params?: { status?: string; account_id?: string }) =>
-    [...carsKeys.lists(), params] as const,
+  list: (params?: {
+    status?: string;
+    account_id?: string;
+    page?: number;
+    pageSize?: number;
+  }) => [...carsKeys.lists(), params] as const,
   details: () => [...carsKeys.all, "detail"] as const,
   detail: (id: string) => [...carsKeys.details(), id] as const,
 };
 
-export type CarCreateInput = {
-  name: string;
-  slug?: string;
-  description?: string;
-  price_per_day: number;
-  transmission: "manual" | "matic";
-  capacity: number;
-  fuel_type?: string;
-  status?: "available" | "rented" | "maintenance";
-};
-
-export type CarUpdateInput = Partial<CarCreateInput>;
-
 async function fetcher<T>(
   url: string,
-  options?: RequestInit & { method?: string; body?: string }
+  options?: RequestInit & { method?: string; body?: string },
 ): Promise<T> {
   const res = await fetch(url, {
     ...options,
@@ -48,14 +41,33 @@ async function fetcher<T>(
 async function fetchCars(params?: {
   status?: string;
   account_id?: string;
-}): Promise<Car[]> {
+  page?: number;
+  pageSize?: number;
+}): Promise<CarsListResponse> {
   const baseUrl = API_CONFIG.ENDPOINTS.cars.base;
   const q = new URLSearchParams();
   if (params?.status) q.set("status", params.status);
   if (params?.account_id) q.set("account_id", params.account_id);
+  if (params?.page != null) q.set("page", String(params.page));
+  if (params?.pageSize != null) q.set("page_size", String(params.pageSize));
   const url = q.toString() ? `${baseUrl}?${q}` : baseUrl;
-  const data = await fetcher<Car[]>(url);
-  return Array.isArray(data) ? data : [];
+  const data = await fetcher<CarsListResponse>(url);
+
+  if (!data || !Array.isArray(data.data)) {
+    return {
+      data: [],
+      pagination: {
+        currentPage: params?.page ?? 1,
+        hasPrevPage: false,
+        prevPage: null,
+        hasNextPage: false,
+        nextPage: null,
+        totalPages: 0,
+      },
+    };
+  }
+
+  return data;
 }
 
 async function fetchCarById(id: string): Promise<Car> {
@@ -83,6 +95,8 @@ async function deleteCar(id: string): Promise<void> {
 export function useCarsQuery(params?: {
   status?: string;
   account_id?: string;
+  page?: number;
+  pageSize?: number;
 }) {
   return useQuery({
     queryKey: carsKeys.list(params),
@@ -90,7 +104,10 @@ export function useCarsQuery(params?: {
   });
 }
 
-export function useCarQuery(id: string | null, options?: { enabled?: boolean }) {
+export function useCarQuery(
+  id: string | null,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: carsKeys.detail(id ?? ""),
     queryFn: () => fetchCarById(id!),
@@ -99,7 +116,7 @@ export function useCarQuery(id: string | null, options?: { enabled?: boolean }) 
 }
 
 export function useCreateCarMutation(
-  opts?: UseMutationOptions<Car, Error, CarCreateInput>
+  opts?: UseMutationOptions<Car, Error, CarCreateInput>,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -116,7 +133,7 @@ export function useCreateCarMutation(
 }
 
 export function useUpdateCarMutation(
-  opts?: UseMutationOptions<Car, Error, { id: string; input: CarUpdateInput }>
+  opts?: UseMutationOptions<Car, Error, { id: string; input: CarUpdateInput }>,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -134,7 +151,7 @@ export function useUpdateCarMutation(
 }
 
 export function useDeleteCarMutation(
-  opts?: UseMutationOptions<void, Error, string>
+  opts?: UseMutationOptions<void, Error, string>,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -158,7 +175,7 @@ export const carImagesKeys = {
 
 async function fetchCarImages(carId: string): Promise<CarImage[]> {
   const data = await fetcher<CarImage[]>(
-    API_CONFIG.ENDPOINTS.cars.images(carId)
+    API_CONFIG.ENDPOINTS.cars.images(carId),
   );
   return Array.isArray(data) ? data : [];
 }
@@ -171,7 +188,10 @@ async function uploadCarImage(carId: string, file: File): Promise<string> {
     credentials: "include",
     body: formData,
   });
-  const data = (await res.json().catch(() => null)) as { url?: string; error?: string };
+  const data = (await res.json().catch(() => null)) as {
+    url?: string;
+    error?: string;
+  };
   if (!res.ok) throw new Error(data?.error ?? "Gagal upload");
   if (!data?.url) throw new Error("URL tidak diterima");
   return data.url;
@@ -179,7 +199,7 @@ async function uploadCarImage(carId: string, file: File): Promise<string> {
 
 export async function addCarImage(
   carId: string,
-  payload: { image_url: string; is_primary?: boolean }
+  payload: { image_url: string; is_primary?: boolean },
 ): Promise<CarImage> {
   return fetcher<CarImage>(API_CONFIG.ENDPOINTS.cars.images(carId), {
     method: "POST",
@@ -187,10 +207,7 @@ export async function addCarImage(
   });
 }
 
-async function deleteCarImage(
-  carId: string,
-  imageId: string
-): Promise<void> {
+async function deleteCarImage(carId: string, imageId: string): Promise<void> {
   await fetcher(API_CONFIG.ENDPOINTS.cars.imageById(carId, imageId), {
     method: "DELETE",
   });
@@ -198,23 +215,26 @@ async function deleteCarImage(
 
 async function setPrimaryCarImage(
   carId: string,
-  imageId: string
+  imageId: string,
 ): Promise<CarImage> {
   return fetcher<CarImage>(
     API_CONFIG.ENDPOINTS.cars.imageById(carId, imageId),
-    { method: "PATCH", body: JSON.stringify({ is_primary: true }) }
+    { method: "PATCH", body: JSON.stringify({ is_primary: true }) },
   );
 }
 
 async function updateCarImage(
   carId: string,
   imageId: string,
-  payload: { is_primary?: boolean; position?: number }
+  payload: { is_primary?: boolean; position?: number },
 ): Promise<CarImage> {
-  return fetcher<CarImage>(API_CONFIG.ENDPOINTS.cars.imageById(carId, imageId), {
-    method: "PATCH",
-    body: JSON.stringify(payload),
-  });
+  return fetcher<CarImage>(
+    API_CONFIG.ENDPOINTS.cars.imageById(carId, imageId),
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export function useCarImagesQuery(carId: string | null) {
@@ -280,8 +300,10 @@ export function useSetPrimaryCarImageMutation(carId: string) {
 export function useUpdateCarImageMutation(carId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (args: { imageId: string; payload: { is_primary?: boolean; position?: number } }) =>
-      updateCarImage(carId, args.imageId, args.payload),
+    mutationFn: (args: {
+      imageId: string;
+      payload: { is_primary?: boolean; position?: number };
+    }) => updateCarImage(carId, args.imageId, args.payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: carsKeys.all });
       queryClient.invalidateQueries({
