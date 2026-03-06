@@ -5,6 +5,7 @@ import { Car } from "lucide-react";
 import Link from "next/link";
 
 import { useAuth } from "@/context/AuthContext";
+
 import Profile from "@/helper/header/Profile";
 
 export default function Header() {
