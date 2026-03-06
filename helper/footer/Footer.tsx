@@ -137,7 +137,7 @@ export default function Footer() {
         </p>
         <div className="flex gap-8 text-gray-500 font-medium">
           <Link
-            href="/syarat-ketentuan"
+            href="/syarat-dan-ketentuan"
             id="footer-term"
             className="hover:text-white"
           >

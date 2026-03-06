@@ -16,6 +16,8 @@ const publicPaths = [
   "/perjalanan-dinas",
   "/sewa-dengan-supir",
   "/sewa-lepas-kunci",
+  "/syarat-dan-ketentuan",
+  "/kebijakan-privasi",
 ];
 
 const adminPaths = ["/dashboard"];

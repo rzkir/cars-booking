@@ -93,7 +93,7 @@ export default function Page() {
   return (
     <main className="flex-1">
       {/* Hero */}
-      <section className="relative h-[80vh] flex items-center overflow-hidden bg-[#1a1a1a] pt-20">
+      <section className="relative h-screen md:h-[80vh] flex items-center overflow-hidden bg-[#1a1a1a] pt-20">
         <div className="absolute inset-0 z-0">
           <Image
             src="https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=1920&q=80"
@@ -103,10 +103,10 @@ export default function Page() {
             className="object-cover opacity-40"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-linear-to-r from-[#1a1a1a] via-[#1a1a1a]/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a] via-[#1a1a1a]/60 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
+        <div className="relative z-10 container mx-auto px-4 md:px-6 w-full">
           <div className="max-w-2xl space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-[#FF9500] backdrop-blur-md">
               <PlaneTakeoff className="w-4 h-4" />
@@ -154,8 +154,8 @@ export default function Page() {
       </section>
 
       {/* Destinasi Utama */}
-      <section className="py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-10 md:py-20 bg-white">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em]">
               Destinasi Utama
@@ -221,8 +221,8 @@ export default function Page() {
       </section>
 
       {/* Titik Penjemputan */}
-      <section className="py-32 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-10 md:py-20 bg-gray-50">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="space-y-12">
               <div className="space-y-4">
@@ -315,8 +315,8 @@ export default function Page() {
       </section>
 
       {/* Daftar Tarif Layanan */}
-      <section className="py-32 bg-white" id="booking-section">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-10 md:py-20 bg-white" id="booking-section">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em]">
               Transparansi Harga
@@ -373,9 +373,7 @@ export default function Page() {
                       {row.route}
                     </td>
                     <td className="px-10 py-6">{row.economy}</td>
-                    <td className="px-10 py-6 text-[#FF9500]">
-                      {row.premium}
-                    </td>
+                    <td className="px-10 py-6 text-[#FF9500]">{row.premium}</td>
                     <td className="px-10 py-6">{row.vip}</td>
                   </tr>
                 ))}
@@ -391,8 +389,8 @@ export default function Page() {
       </section>
 
       {/* Pilihan Armada */}
-      <section className="py-32 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-10 md:py-20 bg-gray-50">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em]">
               Pilihan Armada
@@ -408,7 +406,7 @@ export default function Page() {
                 key={car.name}
                 className={`group bg-white rounded-[2rem] border border-gray-100 overflow-hidden ${cardShadow} hover:-translate-y-2 transition-transform duration-300`}
               >
-                <div className="relative aspect-16/10 overflow-hidden bg-gray-50">
+                <div className="relative aspect-[16/10] overflow-hidden bg-gray-50">
                   <Image
                     src={car.image}
                     alt={car.name}
@@ -464,8 +462,8 @@ export default function Page() {
       </section>
 
       {/* Proses Booking Mudah */}
-      <section className="py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-10 md:py-20 bg-white">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em]">
               Cara Memesan
@@ -516,8 +514,8 @@ export default function Page() {
       </section>
 
       {/* Teknologi Cerdas */}
-      <section className="py-32 bg-[#1a1a1a] overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-10 md:py-20 bg-[#1a1a1a] overflow-hidden">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="space-y-12">
               <div className="space-y-4">
@@ -534,7 +532,9 @@ export default function Page() {
                   <div className="w-12 h-12 rounded-2xl bg-[#FF9500]/20 flex items-center justify-center text-[#FF9500]">
                     <Navigation className="text-2xl" />
                   </div>
-                  <h5 className="text-lg font-black text-white">Live Tracking</h5>
+                  <h5 className="text-lg font-black text-white">
+                    Live Tracking
+                  </h5>
                   <p className="text-sm text-gray-500 font-medium">
                     Pantau lokasi driver Anda secara akurat melalui peta
                     interaktif.
@@ -559,7 +559,7 @@ export default function Page() {
             </div>
 
             <div className="relative flex justify-center">
-              <div className="w-full max-w-[320px] aspect-9/19 bg-[#1a1a1a] rounded-[3rem] border-8 border-white/10 shadow-2xl overflow-hidden">
+              <div className="w-full max-w-[320px] aspect-[9/19] bg-[#1a1a1a] rounded-[3rem] border-8 border-white/10 shadow-2xl overflow-hidden">
                 <Image
                   src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=400&q=80"
                   alt="App tracking showcase"
@@ -567,7 +567,7 @@ export default function Page() {
                   height={760}
                   className="w-full h-full object-cover opacity-80"
                 />
-                <div className="absolute inset-0 bg-linear-to-t from-[#1a1a1a] via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-transparent to-transparent" />
                 <div className="absolute bottom-8 left-0 right-0 px-6 text-center text-white">
                   <p className="text-xs font-black uppercase tracking-widest text-[#FF9500] mb-1">
                     Driver On Way
@@ -584,8 +584,8 @@ export default function Page() {
       </section>
 
       {/* Promo Menarik */}
-      <section className="py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-10 md:py-20 bg-white">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em]">
               Penawaran Spesial
@@ -647,8 +647,8 @@ export default function Page() {
       </section>
 
       {/* FAQ */}
-      <section className="py-32 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6">
+      <section className="py-10 md:py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em]">
               FAQ
@@ -664,11 +664,7 @@ export default function Page() {
                 key={faq.id}
                 className={`bg-white rounded-[2rem] border border-gray-100 ${cardShadow} overflow-hidden`}
               >
-                <input
-                  type="checkbox"
-                  id={faq.id}
-                  className="peer hidden"
-                />
+                <input type="checkbox" id={faq.id} className="peer hidden" />
                 <label
                   htmlFor={faq.id}
                   className="flex justify-between items-center p-8 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -688,8 +684,8 @@ export default function Page() {
       </section>
 
       {/* Testimonial */}
-      <section className="py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-6 text-center space-y-16">
+      <section className="py-10 md:py-20 bg-white">
+        <div className="container mx-auto px-4 md:px-6 text-center space-y-16">
           <div className="space-y-4">
             <div className="flex justify-center gap-1 mb-6 text-[#FF9500]">
               {[...Array(5)].map((_, idx) => (
@@ -767,11 +763,11 @@ export default function Page() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-32 bg-[#FF9500] relative overflow-hidden">
+      <section className="py-10 md:py-20 bg-[#FF9500] relative overflow-hidden">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-black/5 rounded-full blur-3xl" />
 
-        <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-12">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 text-center relative z-10 space-y-12">
           <h3 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-tight text-balance">
             Siap Untuk Perjalanan Nyaman Ke Bandara?
           </h3>
