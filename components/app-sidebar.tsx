@@ -31,24 +31,10 @@ import {
 const data = {
   navMain: [
     {
-      title: "Playground",
-      url: "#",
+      title: "Dashboard",
+      url: "/dashboard",
       icon: SquareTerminal,
       isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
     },
     {
       title: "Cars",
@@ -60,12 +46,16 @@ const data = {
           url: "/dashboard/cars",
         },
         {
-          title: "Explorer",
-          url: "#",
+          title: "Cars Transmisi",
+          url: "/dashboard/cars/transmisi",
         },
         {
-          title: "Quantum",
-          url: "#",
+          title: "Cars Fuel Type",
+          url: "/dashboard/cars/fuel-type",
+        },
+        {
+          title: "Cars Facilities",
+          url: "/dashboard/cars/facilities",
         },
       ],
     },

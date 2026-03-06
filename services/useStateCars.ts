@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   useQuery,
@@ -13,12 +13,49 @@ import { toast } from "sonner";
 
 import { API_CONFIG, getCarsApiHeaders } from "@/lib/config";
 
+export function getPaginationRange(
+  current: number,
+  total: number,
+): (number | "ellipsis")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 3) return [1, 2, 3, 4, "ellipsis", total];
+  if (current >= total - 2)
+    return [1, "ellipsis", total - 3, total - 2, total - 1, total];
+  return [1, "ellipsis", current - 1, current, current + 1, "ellipsis", total];
+}
+
+export const FUEL_OPTIONS = [
+  { value: "bensin", label: "Bensin" },
+  { value: "solar", label: "Solar" },
+  { value: "diesel", label: "Diesel" },
+  { value: "pertamax", label: "Pertamax" },
+  { value: "pertalite", label: "Pertalite" },
+  { value: "premium", label: "Premium" },
+  { value: "hybrid", label: "Hybrid" },
+  { value: "listrik", label: "Listrik" },
+  { value: "electric", label: "Electric" },
+];
+
+export const STATUS_OPTIONS = [
+  { value: "available", label: "Tersedia" },
+  { value: "rented", label: "Disewa" },
+  { value: "maintenance", label: "Perawatan" },
+];
+
+export const RENTAL_TYPE_OPTIONS = [
+  { value: "self_drive", label: "Lepas kunci" },
+  { value: "with_driver", label: "Dengan supir" },
+];
+
 export const carsKeys = {
   all: ["cars"] as const,
   lists: () => [...carsKeys.all, "list"] as const,
   list: (params?: {
     status?: string;
     account_id?: string;
+    search?: string;
+    fuel_type?: string;
+    rental_type?: string;
     page?: number;
     pageSize?: number;
   }) => [...carsKeys.lists(), params] as const,
@@ -46,13 +83,29 @@ async function fetcher<T>(
 async function fetchCars(params?: {
   status?: string;
   account_id?: string;
+  search?: string;
+  fuel_type?: string;
+  rental_type?: string;
   page?: number;
   pageSize?: number;
 }): Promise<CarsListResponse> {
-  const baseUrl = API_CONFIG.ENDPOINTS.cars.base;
+  const hasSearchOrFilter =
+    params?.search ||
+    params?.status ||
+    params?.fuel_type ||
+    params?.rental_type;
+
+  const baseUrl = hasSearchOrFilter
+    ? API_CONFIG.ENDPOINTS.cars.search
+    : API_CONFIG.ENDPOINTS.cars.base;
+
   const q = new URLSearchParams();
+  if (params?.search) q.set("q", params.search);
   if (params?.status) q.set("status", params.status);
-  if (params?.account_id) q.set("account_id", params.account_id);
+  if (!hasSearchOrFilter && params?.account_id)
+    q.set("account_id", params.account_id);
+  if (params?.fuel_type) q.set("fuel_type", params.fuel_type);
+  if (params?.rental_type) q.set("rental_type", params.rental_type);
   if (params?.page != null) q.set("page", String(params.page));
   if (params?.pageSize != null) q.set("page_size", String(params.pageSize));
   const url = q.toString() ? `${baseUrl}?${q}` : baseUrl;
@@ -100,6 +153,9 @@ async function deleteCar(id: string): Promise<void> {
 export function useCarsQuery(params?: {
   status?: string;
   account_id?: string;
+  search?: string;
+  fuel_type?: string;
+  rental_type?: string;
   page?: number;
   pageSize?: number;
 }) {
@@ -170,6 +226,96 @@ export function useDeleteCarMutation(
     },
     ...opts,
   });
+}
+
+// ========== CARS LIST STATE (untuk halaman list mobil) ==========
+
+export const CARS_LIST_PAGE_SIZE = 9;
+
+export function useCarsListState() {
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [fuelType, setFuelType] = useState<string>("all");
+  const [status, setStatus] = useState<string>("all");
+  const [rentalType, setRentalType] = useState<string>("all");
+  const [carToDelete, setCarToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [page]);
+
+  const { data, isLoading } = useCarsQuery({
+    page,
+    pageSize: CARS_LIST_PAGE_SIZE,
+    ...(search && { search }),
+    ...(fuelType && fuelType !== "all" && { fuel_type: fuelType }),
+    ...(status && status !== "all" && { status }),
+    ...(rentalType && rentalType !== "all" && { rental_type: rentalType }),
+  });
+
+  const cars = data?.data ?? [];
+  const pagination = data?.pagination;
+  const deleteMutation = useDeleteCarMutation();
+
+  const resetFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setFuelType("all");
+    setStatus("all");
+    setRentalType("all");
+    setPage(1);
+  };
+
+  const openDeleteDialog = (id: string, name: string) => {
+    setCarToDelete({ id, name });
+  };
+
+  const closeDeleteDialog = () => {
+    setCarToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!carToDelete) return;
+    await deleteMutation.mutateAsync(carToDelete.id);
+    closeDeleteDialog();
+  };
+
+  const hasActiveFilters =
+    !!search || fuelType !== "all" || status !== "all" || rentalType !== "all";
+
+  return {
+    page,
+    setPage,
+    searchInput,
+    setSearchInput,
+    fuelType,
+    setFuelType,
+    status,
+    setStatus,
+    rentalType,
+    setRentalType,
+    carToDelete,
+    openDeleteDialog,
+    closeDeleteDialog,
+    resetFilters,
+    hasActiveFilters,
+    cars,
+    pagination,
+    isLoading,
+    deleteMutation,
+    handleConfirmDelete,
+  };
 }
 
 // ========== CAR IMAGES ==========

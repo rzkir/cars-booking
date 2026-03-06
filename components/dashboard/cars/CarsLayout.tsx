@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
 import Link from "next/link";
 
 import Image from "next/image";
@@ -15,9 +13,21 @@ import {
   Users,
   Gauge,
   CircleDot,
+  Search,
+  Filter,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+
+import { Input } from "@/components/ui/input";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   Card,
@@ -44,6 +54,8 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 import {
   Pagination,
   PaginationContent,
@@ -54,272 +66,401 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 
-import { useCarsQuery, useDeleteCarMutation } from "@/services/useStateCars";
+import { useCarsListState } from "@/services/useStateCars";
 
 import { formatIdr } from "@/hooks/format-idr";
 
-const PAGE_SIZE = 9;
-
-function getPaginationRange(current: number, total: number): (number | "ellipsis")[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  if (current <= 3) return [1, 2, 3, 4, "ellipsis", total];
-  if (current >= total - 2)
-    return [1, "ellipsis", total - 3, total - 2, total - 1, total];
-  return [1, "ellipsis", current - 1, current, current + 1, "ellipsis", total];
-}
+import {
+  FUEL_OPTIONS,
+  STATUS_OPTIONS,
+  RENTAL_TYPE_OPTIONS,
+  getPaginationRange,
+} from "@/services/useStateCars";
 
 export default function CarsPage() {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useCarsQuery({ page, pageSize: PAGE_SIZE });
-  const cars = data?.data ?? [];
-  const pagination = data?.pagination;
-  const deleteMutation = useDeleteCarMutation();
-  const [carToDelete, setCarToDelete] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
-
-  const openDeleteDialog = (id: string, name: string) => {
-    setCarToDelete({ id, name });
-  };
-
-  const closeDeleteDialog = () => {
-    setCarToDelete(null);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!carToDelete) return;
-    await deleteMutation.mutateAsync(carToDelete.id);
-    closeDeleteDialog();
-  };
+  const {
+    setPage,
+    searchInput,
+    setSearchInput,
+    fuelType,
+    setFuelType,
+    status,
+    setStatus,
+    rentalType,
+    setRentalType,
+    carToDelete,
+    openDeleteDialog,
+    closeDeleteDialog,
+    resetFilters,
+    hasActiveFilters,
+    cars,
+    pagination,
+    isLoading,
+    deleteMutation,
+    handleConfirmDelete,
+  } = useCarsListState();
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-4 bg-accent rounded-lg border">
-        <div className="space-y-2">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-            List Mobil
-          </h2>
-          <p className="text-sm text-muted-foreground font-medium">
-            Koleksi mobil terbaik untuk kenyamanan perjalanan Anda
-          </p>
-        </div>
-
-        <Button
-          asChild
-          variant="outline"
-          className="font-medium flex items-center gap-2"
-        >
-          <Link href="/dashboard/cars/new">
-            <Plus className="w-5 h-5" />
-            Tambah Mobil
-          </Link>
-        </Button>
-      </div>
-
-      <div className="rounded-lg border">
-        {isLoading && cars.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            Memuat data...
+      <Card>
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <CardTitle className="text-2xl md:text-3xl">List Mobil</CardTitle>
+            <p className="text-sm text-muted-foreground font-medium">
+              Koleksi mobil terbaik untuk kenyamanan perjalanan Anda
+            </p>
           </div>
-        ) : cars.length === 0 ? (
-          <Empty className="py-12">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Plus className="w-6 h-6" />
-              </EmptyMedia>
-              <EmptyTitle>Belum ada mobil</EmptyTitle>
-              <EmptyDescription>
-                Tambah mobil pertama Anda untuk memulai.
-              </EmptyDescription>
-            </EmptyHeader>
-            <Button asChild>
-              <Link href="/dashboard/cars/new">Tambah Mobil</Link>
-            </Button>
-          </Empty>
-        ) : (
-          <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
-            {cars.map((car) => {
-              const selfDrive = car.car_pricings?.find(
-                (p) => p.type === "self_drive",
-              );
-              const withDriver = car.car_pricings?.find(
-                (p) => p.type === "with_driver",
-              );
-              const baseSelf = selfDrive?.price_per_day ?? car.price_per_day;
-              const baseWith =
-                withDriver?.price_per_day ??
-                car.price_with_driver_per_day ??
-                null;
+          <Button
+            asChild
+            variant="outline"
+            className="font-medium flex items-center gap-2 w-fit"
+          >
+            <Link href="/dashboard/cars/new">
+              <Plus className="w-5 h-5" />
+              Tambah Mobil
+            </Link>
+          </Button>
+        </CardHeader>
+      </Card>
 
-              const imageUrl = Array.isArray(car.car_images)
-                ? (car.car_images.find((i) => i.is_primary)?.image_url ??
-                  car.car_images[0]?.image_url)
-                : (car.car_images as { image_url?: string } | null)?.image_url;
+      <Card>
+        <CardContent>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-3">
+            <div className="relative flex-1 w-fit">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Cari nama mobil..."
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setPage(1);
+                }}
+                className="pl-9"
+              />
+            </div>
 
-              return (
-                <Card key={car.id} className="overflow-hidden p-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <Filter className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <Select
+                value={status}
+                onValueChange={(value) => {
+                  setStatus(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-fit">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua status</SelectItem>
+                  {STATUS_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={fuelType}
+                onValueChange={(value) => {
+                  setFuelType(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-fit">
+                  <SelectValue placeholder="Bahan bakar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua bahan bakar</SelectItem>
+                  {FUEL_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={rentalType}
+                onValueChange={(value) => {
+                  setRentalType(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-fit">
+                  <SelectValue placeholder="Tipe sewa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua tipe</SelectItem>
+                  {RENTAL_TYPE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={resetFilters}>
+                  Reset filter
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-0">
+          {isLoading && cars.length === 0 ? (
+            <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden p-0">
                   <div className="relative aspect-16/10 w-full bg-muted">
-                    {imageUrl ? (
-                      <Image
-                        src={imageUrl}
-                        alt={car.name}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-muted-foreground">
-                        <Car className="h-12 w-12" />
-                      </div>
-                    )}
+                    <Skeleton className="h-full w-full" />
                   </div>
-
                   <CardHeader className="space-y-1">
-                    <CardTitle className="text-lg leading-tight">
-                      {car.name}
-                    </CardTitle>
+                    <Skeleton className="h-5 w-3/4" />
                   </CardHeader>
-
                   <CardContent className="space-y-4">
                     <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Harga per hari
-                      </p>
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Key className="h-3.5 w-3.5 shrink-0" />
-                            Lepas kunci
-                          </span>
-                          <span className="font-semibold tabular-nums">
-                            {formatIdr(baseSelf)}
-                          </span>
-                        </div>
-                        {baseWith && (
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Users className="h-3.5 w-3.5 shrink-0" />
-                              Dengan supir
-                            </span>
-                            <span className="font-semibold tabular-nums">
-                              {formatIdr(baseWith)}
-                            </span>
-                          </div>
-                        )}
+                      <Skeleton className="h-3 w-24" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
                       </div>
                     </div>
-
                     <div className="flex flex-wrap gap-2">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium capitalize">
-                        <Gauge className="h-3 w-3 shrink-0" />
-                        {car.transmission}
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                        <Users className="h-3 w-3 shrink-0" />
-                        {car.capacity} orang
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium capitalize">
-                        <CircleDot className="h-3 w-3 shrink-0" />
-                        {car.status}
-                      </span>
+                      <Skeleton className="h-6 w-20" />
+                      <Skeleton className="h-6 w-20" />
+                      <Skeleton className="h-6 w-20" />
                     </div>
                   </CardContent>
                   <CardFooter className="flex gap-2 pt-0 pb-4">
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                    >
-                      <Link href={`/dashboard/cars/${car.id}`}>
-                        <Pencil className="mr-2 w-4 h-4" />
-                        Edit
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-destructive hover:text-destructive border-destructive/50 hover:border-destructive"
-                      onClick={() => openDeleteDialog(car.id, car.name)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <Skeleton className="h-9 w-full" />
+                    <Skeleton className="h-9 w-10" />
                   </CardFooter>
                 </Card>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          ) : cars.length === 0 ? (
+            <Empty className="py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Search className="w-6 h-6" />
+                </EmptyMedia>
+                <EmptyTitle>
+                  {hasActiveFilters
+                    ? "Tidak ada mobil yang sesuai filter"
+                    : "Belum ada mobil"}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {hasActiveFilters
+                    ? "Coba ubah filter atau kata kunci pencarian."
+                    : "Tambah mobil pertama Anda untuk memulai."}
+                </EmptyDescription>
+              </EmptyHeader>
+              {hasActiveFilters ? (
+                <Button variant="outline" onClick={resetFilters}>
+                  Reset filter
+                </Button>
+              ) : (
+                <Button asChild>
+                  <Link href="/dashboard/cars/new">Tambah Mobil</Link>
+                </Button>
+              )}
+            </Empty>
+          ) : (
+            <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              {cars.map((car) => {
+                const selfDrive = car.car_pricings?.find(
+                  (p) => p.type === "self_drive",
+                );
+                const withDriver = car.car_pricings?.find(
+                  (p) => p.type === "with_driver",
+                );
+                const baseSelf = selfDrive?.price_per_day ?? car.price_per_day;
+                const baseWith =
+                  withDriver?.price_per_day ??
+                  car.price_with_driver_per_day ??
+                  null;
 
-        {!isLoading && cars.length > 0 && pagination && pagination.totalPages > 1 && (
-          <div className="border-t px-4 py-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (pagination.hasPrevPage && pagination.prevPage != null)
-                        setPage(pagination.prevPage);
-                    }}
-                    className={
-                      !pagination.hasPrevPage
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-                {getPaginationRange(
-                  pagination.currentPage,
-                  pagination.totalPages,
-                ).map((item, i) =>
-                  item === "ellipsis" ? (
-                    <PaginationItem key={`ellipsis-${i}`}>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  ) : (
-                    <PaginationItem key={item}>
-                      <PaginationLink
+                const imageUrl = Array.isArray(car.car_images)
+                  ? (car.car_images.find((i) => i.is_primary)?.image_url ??
+                    car.car_images[0]?.image_url)
+                  : (car.car_images as { image_url?: string } | null)
+                      ?.image_url;
+
+                return (
+                  <Card key={car.id} className="overflow-hidden p-0">
+                    <div className="relative aspect-16/10 w-full bg-muted">
+                      {imageUrl ? (
+                        <Image
+                          src={imageUrl}
+                          alt={car.name}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-muted-foreground">
+                          <Car className="h-12 w-12" />
+                        </div>
+                      )}
+                    </div>
+
+                    <CardHeader className="space-y-1">
+                      <CardTitle className="text-lg leading-tight">
+                        {car.name}
+                      </CardTitle>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Harga per hari
+                        </p>
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                              <Key className="h-3.5 w-3.5 shrink-0" />
+                              Lepas kunci
+                            </span>
+                            <span className="font-semibold tabular-nums">
+                              {formatIdr(baseSelf)}
+                            </span>
+                          </div>
+                          {baseWith && (
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Users className="h-3.5 w-3.5 shrink-0" />
+                                Dengan supir
+                              </span>
+                              <span className="font-semibold tabular-nums">
+                                {formatIdr(baseWith)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium capitalize">
+                          <Gauge className="h-3 w-3 shrink-0" />
+                          {car.transmission}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                          <Users className="h-3 w-3 shrink-0" />
+                          {car.capacity} orang
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium capitalize">
+                          <CircleDot className="h-3 w-3 shrink-0" />
+                          {car.status}
+                        </span>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex gap-2 pt-0 pb-4">
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        <Link href={`/dashboard/cars/${car.id}`}>
+                          <Pencil className="mr-2 w-4 h-4" />
+                          Edit
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive border-destructive/50 hover:border-destructive"
+                        onClick={() => openDeleteDialog(car.id, car.name)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {!isLoading &&
+            cars.length > 0 &&
+            pagination &&
+            pagination.totalPages > 1 && (
+              <div className="border-t px-4 py-4">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
                         href="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          setPage(item);
+                          if (
+                            pagination.hasPrevPage &&
+                            pagination.prevPage != null
+                          )
+                            setPage(pagination.prevPage);
                         }}
-                        isActive={item === pagination.currentPage}
-                        className="cursor-pointer"
-                      >
-                        {item}
-                      </PaginationLink>
+                        className={
+                          !pagination.hasPrevPage
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
                     </PaginationItem>
-                  ),
-                )}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (pagination.hasNextPage && pagination.nextPage != null)
-                        setPage(pagination.nextPage);
-                    }}
-                    className={
-                      !pagination.hasNextPage
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
-      </div>
+                    {getPaginationRange(
+                      pagination.currentPage,
+                      pagination.totalPages,
+                    ).map((item, i) =>
+                      item === "ellipsis" ? (
+                        <PaginationItem key={`ellipsis-${i}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      ) : (
+                        <PaginationItem key={item}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setPage(item);
+                            }}
+                            isActive={item === pagination.currentPage}
+                            className="cursor-pointer"
+                          >
+                            {item}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ),
+                    )}
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (
+                            pagination.hasNextPage &&
+                            pagination.nextPage != null
+                          )
+                            setPage(pagination.nextPage);
+                        }}
+                        className={
+                          !pagination.hasNextPage
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+        </CardContent>
+      </Card>
 
       <Dialog
         open={!!carToDelete}

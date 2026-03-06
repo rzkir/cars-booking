@@ -1,6 +1,6 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const API_SECRET = process.env.API_SECRET;
+const API_SECRET = process.env.NEXT_PUBLIC_API_SECRET;
 
 export const API_CONFIG = {
   ENDPOINTS: {
@@ -48,6 +48,7 @@ export const API_CONFIG = {
     },
     cars: {
       base: `${API_BASE_URL}/api/cars`,
+      search: `${API_BASE_URL}/api/cars/search`,
       byId: (id: string) => `${API_BASE_URL}/api/cars/${id}`,
       bySlug: (slug: string) => `${API_BASE_URL}/api/cars/slug/${slug}`,
       images: (carId: string) => `${API_BASE_URL}/api/cars/${carId}/images`,
@@ -59,7 +60,6 @@ export const API_CONFIG = {
   SECRET: API_SECRET,
 };
 
-/** Header untuk request ke API cars (termasuk X-API-Secret bila API_SECRET di-set). */
 export function getCarsApiHeaders(
   extra?: Record<string, string>,
 ): Record<string, string> {
