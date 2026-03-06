@@ -36,7 +36,7 @@ export default function Header() {
             Daftar Mobil
           </Link>
           <Link
-            href="/tentang"
+            href="/tentang-kami"
             id="nav-about"
             className="hover:text-[#1a1a1a] transition-colors"
           >
@@ -53,11 +53,11 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           <Link
-            href="/tracking-pemesanan"
-            id="header-tracking"
+            href="/lacak-pemesanan"
+            id="header-lacak-pemesanan"
             className="rounded-full font-bold text-sm text-gray-600 underline"
           >
-            Tracking Pemesanan
+            Lacak Pemesanan
           </Link>
 
           {loading ? (
@@ -67,10 +67,10 @@ export default function Header() {
           ) : (
             <Link
               href="/signin"
-              id="header-cta-booking"
+              id="header-cta-pesan"
               className="bg-[#ff9500] text-white px-6 py-3 rounded-full font-bold text-sm transition-transform"
             >
-              Booking Sekarang
+              Pesan Sekarang
             </Link>
           )}
         </div>

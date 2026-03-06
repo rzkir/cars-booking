@@ -2,16 +2,20 @@ import { NextResponse } from "next/server";
 
 import type { NextRequest } from "next/server";
 
-import { API_CONFIG } from "@/lib/config";
+import { API_CONFIG } from "@/hooks/config";
 
 const publicPaths = [
   "/signin",
   "/signup",
   "/daftar-mobil",
   "/daftar-mobil/:slug",
-  "/tentang",
+  "/tentang-kami",
   "/kontak",
-  "/tracking-pemesanan",
+  "/lacak-pemesanan",
+  "/antar-jemput-bandara",
+  "/perjalanan-dinas",
+  "/sewa-dengan-supir",
+  "/sewa-lepas-kunci",
 ];
 
 const adminPaths = ["/dashboard"];
@@ -118,7 +122,7 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/tracking-pemesanan/")) {
+  if (pathname.startsWith("/lacak-pemesanan/")) {
     return NextResponse.next();
   }
 

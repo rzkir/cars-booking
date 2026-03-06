@@ -9,6 +9,8 @@ import {
   MessageCircle,
 } from "lucide-react";
 
+import Link from "next/link";
+
 export default function Footer() {
   return (
     <footer className="bg-[#1a1a1a] text-white pt-24 pb-12">
@@ -27,27 +29,27 @@ export default function Footer() {
             memberikan kemudahan perjalanan Anda dengan armada terbaik.
           </p>
           <div className="flex items-center gap-4">
-            <a
+            <Link
               href="#"
               id="social-ig"
               className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-[#FF9500] hover:text-white transition-all"
             >
               <Instagram className="w-5 h-5" />
-            </a>
-            <a
+            </Link>
+            <Link
               href="#"
               id="social-fb"
               className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-[#FF9500] hover:text-white transition-all"
             >
               <Facebook className="w-5 h-5" />
-            </a>
-            <a
+            </Link>
+            <Link
               href="#"
               id="social-tw"
               className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-[#FF9500] hover:text-white transition-all"
             >
               <Twitter className="w-5 h-5" />
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -55,40 +57,40 @@ export default function Footer() {
           <h4 className="text-lg font-black">Layanan</h4>
           <ul className="space-y-4 text-gray-400 font-medium">
             <li>
-              <a
-                href="#"
+              <Link
+                href="/sewa-lepas-kunci"
                 id="footer-link-1"
                 className="hover:text-white transition-colors"
               >
                 Sewa Lepas Kunci
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="#"
+              <Link
+                href="/sewa-dengan-supir"
                 id="footer-link-2"
                 className="hover:text-white transition-colors"
               >
                 Sewa Dengan Supir
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="#"
+              <Link
+                href="/antar-jemput-bandara"
                 id="footer-link-3"
                 className="hover:text-white transition-colors"
               >
                 Antar Jemput Bandara
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="#"
+              <Link
+                href="/perjalanan-dinas"
                 id="footer-link-4"
                 className="hover:text-white transition-colors"
               >
                 Perjalanan Dinas
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -117,14 +119,14 @@ export default function Footer() {
             <p className="text-sm text-gray-400 mb-4">
               Dapatkan update ketersediaan mobil langsung ke HP Anda.
             </p>
-            <a
+            <Link
               href="https://wa.me/"
               id="footer-wa-btn"
               className="flex items-center justify-center gap-2 w-full bg-[#25D366] text-white py-3 rounded-xl font-bold hover:brightness-110 transition-all"
             >
               <MessageCircle className="w-5 h-5" />
               Chat Sekarang
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -134,12 +136,20 @@ export default function Footer() {
           &copy; 2024 DriveEase Indonesia. All rights reserved.
         </p>
         <div className="flex gap-8 text-gray-500 font-medium">
-          <a href="#" id="footer-term" className="hover:text-white">
+          <Link
+            href="/syarat-ketentuan"
+            id="footer-term"
+            className="hover:text-white"
+          >
             Syarat &amp; Ketentuan
-          </a>
-          <a href="#" id="footer-privacy" className="hover:text-white">
+          </Link>
+          <Link
+            href="/kebijakan-privasi"
+            id="footer-privacy"
+            className="hover:text-white"
+          >
             Kebijakan Privasi
-          </a>
+          </Link>
         </div>
       </div>
     </footer>

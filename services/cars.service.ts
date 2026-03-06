@@ -11,7 +11,7 @@ import {
 
 import { toast } from "sonner";
 
-import { API_CONFIG, getCarsApiHeaders } from "@/lib/config";
+import { API_CONFIG, getCarsApiHeaders } from "@/hooks/config";
 
 export function getPaginationRange(
   current: number,
@@ -26,14 +26,18 @@ export function getPaginationRange(
 
 export const FUEL_OPTIONS = [
   { value: "bensin", label: "Bensin" },
-  { value: "solar", label: "Solar" },
   { value: "diesel", label: "Diesel" },
+  { value: "electric", label: "Electric" },
+  { value: "hybrid", label: "Hybrid" },
   { value: "pertamax", label: "Pertamax" },
   { value: "pertalite", label: "Pertalite" },
   { value: "premium", label: "Premium" },
-  { value: "hybrid", label: "Hybrid" },
   { value: "listrik", label: "Listrik" },
-  { value: "electric", label: "Electric" },
+];
+
+export const TRANSMISSION_OPTIONS = [
+  { value: "manual", label: "Manual" },
+  { value: "matic", label: "Matic" },
 ];
 
 export const STATUS_OPTIONS = [
@@ -56,6 +60,7 @@ export const carsKeys = {
     search?: string;
     fuel_type?: string;
     rental_type?: string;
+    transmission?: string;
     page?: number;
     pageSize?: number;
   }) => [...carsKeys.lists(), params] as const,
@@ -86,6 +91,7 @@ async function fetchCars(params?: {
   search?: string;
   fuel_type?: string;
   rental_type?: string;
+  transmission?: string;
   page?: number;
   pageSize?: number;
 }): Promise<CarsListResponse> {
@@ -93,7 +99,8 @@ async function fetchCars(params?: {
     params?.search ||
     params?.status ||
     params?.fuel_type ||
-    params?.rental_type;
+    params?.rental_type ||
+    params?.transmission;
 
   const baseUrl = hasSearchOrFilter
     ? API_CONFIG.ENDPOINTS.cars.search
@@ -106,6 +113,7 @@ async function fetchCars(params?: {
     q.set("account_id", params.account_id);
   if (params?.fuel_type) q.set("fuel_type", params.fuel_type);
   if (params?.rental_type) q.set("rental_type", params.rental_type);
+  if (params?.transmission) q.set("transmission", params.transmission);
   if (params?.page != null) q.set("page", String(params.page));
   if (params?.pageSize != null) q.set("page_size", String(params.pageSize));
   const url = q.toString() ? `${baseUrl}?${q}` : baseUrl;
@@ -239,6 +247,7 @@ export function useCarsListState() {
   const [fuelType, setFuelType] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
   const [rentalType, setRentalType] = useState<string>("all");
+  const [transmission, setTransmission] = useState<string>("all");
   const [carToDelete, setCarToDelete] = useState<{
     id: string;
     name: string;
@@ -262,6 +271,7 @@ export function useCarsListState() {
     ...(fuelType && fuelType !== "all" && { fuel_type: fuelType }),
     ...(status && status !== "all" && { status }),
     ...(rentalType && rentalType !== "all" && { rental_type: rentalType }),
+    ...(transmission && transmission !== "all" && { transmission }),
   });
 
   const cars = data?.data ?? [];
@@ -274,6 +284,7 @@ export function useCarsListState() {
     setFuelType("all");
     setStatus("all");
     setRentalType("all");
+    setTransmission("all");
     setPage(1);
   };
 
@@ -292,7 +303,11 @@ export function useCarsListState() {
   };
 
   const hasActiveFilters =
-    !!search || fuelType !== "all" || status !== "all" || rentalType !== "all";
+    !!search ||
+    fuelType !== "all" ||
+    status !== "all" ||
+    rentalType !== "all" ||
+    transmission !== "all";
 
   return {
     page,
@@ -305,6 +320,8 @@ export function useCarsListState() {
     setStatus,
     rentalType,
     setRentalType,
+    transmission,
+    setTransmission,
     carToDelete,
     openDeleteDialog,
     closeDeleteDialog,
@@ -478,3 +495,234 @@ export function useUpdateCarImageMutation(carId: string) {
 }
 
 export { uploadCarImage };
+
+// ========== LOOKUP: TRANSMISSIONS, FUEL TYPES, FACILITIES ==========
+
+const LOOKUP_KEY_BASE = ["lookups"] as const;
+
+export const lookupKeys = {
+  all: LOOKUP_KEY_BASE,
+  transmissions: [...LOOKUP_KEY_BASE, "transmissions"] as const,
+  fuelTypes: [...LOOKUP_KEY_BASE, "fuelTypes"] as const,
+  facilities: [...LOOKUP_KEY_BASE, "facilities"] as const,
+};
+
+async function fetchTransmissions(): Promise<Transmission[]> {
+  const data = await fetcher<Transmission[]>(
+    API_CONFIG.ENDPOINTS.transmissions.base,
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+async function fetchFuelTypes(): Promise<FuelType[]> {
+  const data = await fetcher<FuelType[]>(API_CONFIG.ENDPOINTS.fuelTypes.base);
+  return Array.isArray(data) ? data : [];
+}
+
+async function fetchFacilities(): Promise<Facility[]> {
+  const data = await fetcher<Facility[]>(API_CONFIG.ENDPOINTS.facilities.base);
+  return Array.isArray(data) ? data : [];
+}
+
+export function useTransmissionsQuery() {
+  return useQuery({
+    queryKey: lookupKeys.transmissions,
+    queryFn: fetchTransmissions,
+  });
+}
+
+export function useFuelTypesQuery() {
+  return useQuery({
+    queryKey: lookupKeys.fuelTypes,
+    queryFn: fetchFuelTypes,
+  });
+}
+
+export function useFacilitiesQuery() {
+  return useQuery({
+    queryKey: lookupKeys.facilities,
+    queryFn: fetchFacilities,
+  });
+}
+
+// Transmissions mutations
+async function createTransmission(payload: {
+  name: string;
+}): Promise<Transmission> {
+  return fetcher<Transmission>(API_CONFIG.ENDPOINTS.transmissions.base, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+async function updateTransmission(
+  id: string,
+  payload: { name: string },
+): Promise<Transmission> {
+  return fetcher<Transmission>(API_CONFIG.ENDPOINTS.transmissions.byId(id), {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+async function deleteTransmission(id: string): Promise<void> {
+  await fetcher(API_CONFIG.ENDPOINTS.transmissions.byId(id), {
+    method: "DELETE",
+  });
+}
+
+export function useCreateTransmissionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createTransmission,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.transmissions });
+      toast.success("Transmisi berhasil ditambahkan");
+    },
+    onError: (err) => toast.error(err.message || "Gagal menambah transmisi"),
+  });
+}
+
+export function useUpdateTransmissionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      updateTransmission(id, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.transmissions });
+      toast.success("Transmisi berhasil diperbarui");
+    },
+    onError: (err) => toast.error(err.message || "Gagal memperbarui transmisi"),
+  });
+}
+
+export function useDeleteTransmissionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteTransmission,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.transmissions });
+      toast.success("Transmisi berhasil dihapus");
+    },
+    onError: (err) => toast.error(err.message || "Gagal menghapus transmisi"),
+  });
+}
+
+// Fuel types mutations
+async function createFuelType(payload: { name: string }): Promise<FuelType> {
+  return fetcher<FuelType>(API_CONFIG.ENDPOINTS.fuelTypes.base, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+async function updateFuelType(
+  id: string,
+  payload: { name: string },
+): Promise<FuelType> {
+  return fetcher<FuelType>(API_CONFIG.ENDPOINTS.fuelTypes.byId(id), {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+async function deleteFuelType(id: string): Promise<void> {
+  await fetcher(API_CONFIG.ENDPOINTS.fuelTypes.byId(id), { method: "DELETE" });
+}
+
+export function useCreateFuelTypeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createFuelType,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.fuelTypes });
+      toast.success("Bahan bakar berhasil ditambahkan");
+    },
+    onError: (err) => toast.error(err.message || "Gagal menambah bahan bakar"),
+  });
+}
+
+export function useUpdateFuelTypeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      updateFuelType(id, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.fuelTypes });
+      toast.success("Bahan bakar berhasil diperbarui");
+    },
+    onError: (err) =>
+      toast.error(err.message || "Gagal memperbarui bahan bakar"),
+  });
+}
+
+export function useDeleteFuelTypeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteFuelType,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.fuelTypes });
+      toast.success("Bahan bakar berhasil dihapus");
+    },
+    onError: (err) => toast.error(err.message || "Gagal menghapus bahan bakar"),
+  });
+}
+
+// Facilities mutations
+async function createFacility(payload: { name: string }): Promise<Facility> {
+  return fetcher<Facility>(API_CONFIG.ENDPOINTS.facilities.base, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+async function updateFacility(
+  id: string,
+  payload: { name: string },
+): Promise<Facility> {
+  return fetcher<Facility>(API_CONFIG.ENDPOINTS.facilities.byId(id), {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+async function deleteFacility(id: string): Promise<void> {
+  await fetcher(API_CONFIG.ENDPOINTS.facilities.byId(id), { method: "DELETE" });
+}
+
+export function useCreateFacilityMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createFacility,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.facilities });
+      toast.success("Fasilitas berhasil ditambahkan");
+    },
+    onError: (err) => toast.error(err.message || "Gagal menambah fasilitas"),
+  });
+}
+
+export function useUpdateFacilityMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      updateFacility(id, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.facilities });
+      toast.success("Fasilitas berhasil diperbarui");
+    },
+    onError: (err) => toast.error(err.message || "Gagal memperbarui fasilitas"),
+  });
+}
+
+export function useDeleteFacilityMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteFacility,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.facilities });
+      toast.success("Fasilitas berhasil dihapus");
+    },
+    onError: (err) => toast.error(err.message || "Gagal menghapus fasilitas"),
+  });
+}

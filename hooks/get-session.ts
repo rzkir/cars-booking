@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-import { API_CONFIG } from "@/lib/config";
+import { API_CONFIG } from "@/hooks/config";
 
 /** Normalisasi role: hanya "admin" (case-insensitive) = admin, selain itu customer */
 function normalizeRole(role: unknown): "admin" | "customer" {

@@ -66,7 +66,7 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 
-import { useCarsListState } from "@/services/useStateCars";
+import { useCarsListState } from "@/services/cars.service";
 
 import { formatIdr } from "@/hooks/format-idr";
 
@@ -74,10 +74,30 @@ import {
   FUEL_OPTIONS,
   STATUS_OPTIONS,
   RENTAL_TYPE_OPTIONS,
+  TRANSMISSION_OPTIONS,
   getPaginationRange,
-} from "@/services/useStateCars";
+  useFuelTypesQuery,
+  useTransmissionsQuery,
+} from "@/services/cars.service";
 
 export default function CarsPage() {
+  const { data: fuelTypes = [] } = useFuelTypesQuery();
+  const { data: transmissions = [] } = useTransmissionsQuery();
+  const fuelOptions =
+    fuelTypes.length > 0
+      ? fuelTypes.map((f) => ({
+          value: f.name,
+          label: f.name.charAt(0).toUpperCase() + f.name.slice(1),
+        }))
+      : FUEL_OPTIONS;
+  const transmissionOptions =
+    transmissions.length > 0
+      ? transmissions.map((t) => ({
+          value: t.name.toLowerCase(),
+          label: t.name.charAt(0).toUpperCase() + t.name.slice(1),
+        }))
+      : TRANSMISSION_OPTIONS;
+
   const {
     setPage,
     searchInput,
@@ -88,6 +108,8 @@ export default function CarsPage() {
     setStatus,
     rentalType,
     setRentalType,
+    transmission,
+    setTransmission,
     carToDelete,
     openDeleteDialog,
     closeDeleteDialog,
@@ -173,7 +195,7 @@ export default function CarsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua bahan bakar</SelectItem>
-                  {FUEL_OPTIONS.map((o) => (
+                  {fuelOptions.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
                     </SelectItem>
@@ -194,6 +216,26 @@ export default function CarsPage() {
                 <SelectContent>
                   <SelectItem value="all">Semua tipe</SelectItem>
                   {RENTAL_TYPE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={transmission}
+                onValueChange={(value) => {
+                  setTransmission(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-fit">
+                  <SelectValue placeholder="Transmisi" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua transmisi</SelectItem>
+                  {transmissionOptions.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
                     </SelectItem>

@@ -30,6 +30,8 @@ import { Input } from "@/components/ui/input";
 
 import { Textarea } from "@/components/ui/textarea";
 
+import { Checkbox } from "@/components/ui/checkbox";
+
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 
 import {
@@ -58,7 +60,12 @@ import {
   useSetPrimaryCarImageMutation,
   useUpdateCarImageMutation,
   uploadCarImage,
-} from "@/services/useStateCars";
+  useTransmissionsQuery,
+  useFuelTypesQuery,
+  useFacilitiesQuery,
+  TRANSMISSION_OPTIONS,
+  FUEL_OPTIONS,
+} from "@/services/cars.service";
 
 export const emptyForm = {
   name: "",
@@ -66,7 +73,7 @@ export const emptyForm = {
   description: "",
   price_per_day: "",
   price_with_driver_per_day: "",
-  transmission: "manual" as "manual" | "matic",
+  transmission: "",
   capacity: "",
   fuel_type: "",
   year: "",
@@ -109,6 +116,37 @@ export function CarFormInner({
   imagesSection?: React.ReactNode;
 }) {
   const [form, setForm] = useState(initialForm);
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>(() =>
+    initialForm.facilities
+      .split(",")
+      .map((f) => f.trim())
+      .filter(Boolean),
+  );
+  const { data: transmissions = [] } = useTransmissionsQuery();
+  const { data: fuelTypes = [] } = useFuelTypesQuery();
+  const { data: facilities = [] } = useFacilitiesQuery();
+
+  const transmissionOptions =
+    transmissions.length > 0
+      ? transmissions.map((t) => ({
+          value: t.name.toLowerCase(),
+          label: t.name.charAt(0).toUpperCase() + t.name.slice(1),
+        }))
+      : TRANSMISSION_OPTIONS;
+
+  const fuelOptions =
+    fuelTypes.length > 0
+      ? fuelTypes.map((f) => ({
+          value: f.name,
+          label: f.name.charAt(0).toUpperCase() + f.name.slice(1),
+        }))
+      : FUEL_OPTIONS;
+
+  const toggleFacility = (name: string) => {
+    setSelectedFacilities((prev) =>
+      prev.includes(name) ? prev.filter((f) => f !== name) : [...prev, name],
+    );
+  };
 
   const autoSlug = () => {
     const s = form.name
@@ -121,10 +159,6 @@ export function CarFormInner({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const yearValue = form.year.trim();
-    const facilitiesArray = form.facilities
-      .split(",")
-      .map((f) => f.trim())
-      .filter(Boolean);
 
     const payload = {
       name: form.name.trim(),
@@ -134,12 +168,13 @@ export function CarFormInner({
       price_with_driver_per_day: form.price_with_driver_per_day.trim()
         ? parseIdrInput(form.price_with_driver_per_day)
         : undefined,
-      transmission: form.transmission,
+      transmission: form.transmission?.trim().toLowerCase() ?? "",
       capacity: Number(form.capacity),
       fuel_type: form.fuel_type.trim() || undefined,
       year: yearValue ? Number(yearValue) : undefined,
       rental_type: form.rental_type as "self_drive" | "with_driver",
-      facilities: facilitiesArray.length > 0 ? facilitiesArray : undefined,
+      facilities:
+        selectedFacilities.length > 0 ? selectedFacilities : undefined,
       status: form.status,
     };
     await onSubmit(payload);
@@ -302,7 +337,7 @@ export function CarFormInner({
             onValueChange={(value) =>
               setForm((p) => ({
                 ...p,
-                transmission: value as "manual" | "matic",
+                transmission: value,
               }))
             }
           >
@@ -310,8 +345,11 @@ export function CarFormInner({
               <SelectValue placeholder="Pilih transmisi" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="manual">Manual</SelectItem>
-              <SelectItem value="matic">Matic</SelectItem>
+              {transmissionOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
@@ -334,11 +372,11 @@ export function CarFormInner({
               <SelectValue placeholder="Pilih jenis bahan bakar" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="bensin">Bensin</SelectItem>
-              <SelectItem value="solar">Solar</SelectItem>
-              <SelectItem value="diesel">Diesel</SelectItem>
-              <SelectItem value="listrik">Listrik</SelectItem>
-              <SelectItem value="hybrid">Hybrid</SelectItem>
+              {fuelOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
@@ -366,18 +404,36 @@ export function CarFormInner({
             <ListChecks className="h-4 w-4" />
             Fasilitas
           </FieldLabel>
-          <Textarea
-            id="facilities"
-            value={form.facilities}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, facilities: e.target.value }))
-            }
-            placeholder="Contoh: AC, Bluetooth, Audio, Kursi bayi"
-            rows={2}
-          />
-          <FieldDescription className="text-xs text-muted-foreground">
-            Pisahkan fasilitas dengan koma.
-          </FieldDescription>
+          {facilities.length > 0 ? (
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {facilities.map((facility) => {
+                  const value = facility.name;
+                  const checked = selectedFacilities.includes(value);
+                  return (
+                    <label
+                      key={facility.id}
+                      className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-accent"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggleFacility(value)}
+                      />
+                      <span className="truncate">{facility.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <FieldDescription className="text-xs text-muted-foreground">
+                Centang fasilitas yang tersedia.
+              </FieldDescription>
+            </div>
+          ) : (
+            <FieldDescription className="text-xs text-muted-foreground">
+              Belum ada data fasilitas. Tambahkan fasilitas dulu di menu
+              Facilities.
+            </FieldDescription>
+          )}
         </Field>
       </div>
 

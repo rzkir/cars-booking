@@ -1,0 +1,45 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const API_SECRET = process.env.NEXT_PUBLIC_API_SECRET;
+
+export const API_CONFIG = {
+  ENDPOINTS: {
+    base: API_BASE_URL,
+    // Auth endpoints (Hono backend: /api/auth/*)
+    signIn: `${API_BASE_URL}/api/auth/signin`,
+    signUp: `${API_BASE_URL}/api/auth/signup`,
+    signOut: `${API_BASE_URL}/api/auth/logout`,
+    session: `${API_BASE_URL}/api/auth/session`,
+    cars: {
+      base: `${API_BASE_URL}/api/cars`,
+      search: `${API_BASE_URL}/api/cars/search`,
+      byId: (id: string) => `${API_BASE_URL}/api/cars/${id}`,
+      bySlug: (slug: string) => `${API_BASE_URL}/api/cars/slug/${slug}`,
+      images: (carId: string) => `${API_BASE_URL}/api/cars/${carId}/images`,
+      imageById: (carId: string, imageId: string) =>
+        `${API_BASE_URL}/api/cars/${carId}/images/${imageId}`,
+      upload: (carId: string) => `${API_BASE_URL}/api/cars/${carId}/upload`,
+    },
+    transmissions: {
+      base: `${API_BASE_URL}/api/transmissions`,
+      byId: (id: string) => `${API_BASE_URL}/api/transmissions/${id}`,
+    },
+    fuelTypes: {
+      base: `${API_BASE_URL}/api/fuel-types`,
+      byId: (id: string) => `${API_BASE_URL}/api/fuel-types/${id}`,
+    },
+    facilities: {
+      base: `${API_BASE_URL}/api/facilities`,
+      byId: (id: string) => `${API_BASE_URL}/api/facilities/${id}`,
+    },
+  },
+  SECRET: API_SECRET,
+};
+
+export function getCarsApiHeaders(
+  extra?: Record<string, string>,
+): Record<string, string> {
+  const headers: Record<string, string> = { ...extra };
+  if (API_SECRET) headers["X-API-Secret"] = API_SECRET;
+  return headers;
+}

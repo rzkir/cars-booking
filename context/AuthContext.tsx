@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, useRef } from "react";
 
 import { toast } from "sonner";
 
-import { API_CONFIG } from "@/lib/config";
+import { API_CONFIG } from "@/hooks/config";
 
 /** Normalisasi role seperti di be: hanya "admin" (case-insensitive) = admin, selain itu customer */
 function normalizeRole(role: unknown): "admin" | "customer" {
@@ -42,7 +42,9 @@ export function AuthProvider({
     sessionFromServer ? (initialSession ?? null) : null,
   );
   const [userRole, setUserRole] = useState<UserRole | null>(
-    sessionFromServer && initialSession ? (initialSession.role as UserRole) : null,
+    sessionFromServer && initialSession
+      ? (initialSession.role as UserRole)
+      : null,
   );
   const [loading, setLoading] = useState(!sessionFromServer);
 

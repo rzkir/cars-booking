@@ -5,9 +5,9 @@ type CarCardProps = {
   title: string;
   subtitle: string;
   price: string;
-  badge?: string;
   transmission: string;
   fuel: string;
+  status: string;
   slug: string;
 };
 
@@ -18,9 +18,9 @@ export function CarCard({
   title,
   subtitle,
   price,
-  badge,
   transmission,
   fuel,
+  status,
   slug,
 }: CarCardProps) {
   return (
@@ -32,9 +32,9 @@ export function CarCard({
           fill
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        {badge && (
+        {status && (
           <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider">
-            {badge}
+            {status}
           </div>
         )}
       </div>

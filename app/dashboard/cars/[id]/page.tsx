@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
-import CrudCars from "@/components/dashboard/cars/crud/CarsForm";
+import CrudCars from "@/components/dashboard/cars/cars/crud/CarsForm";
 
-import { API_CONFIG, getCarsApiHeaders } from "@/lib/config";
+import { API_CONFIG, getCarsApiHeaders } from "@/hooks/config";
 
 async function getCarName(id: string): Promise<string | null> {
   try {

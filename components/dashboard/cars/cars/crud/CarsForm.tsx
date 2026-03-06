@@ -25,7 +25,7 @@ import {
   useNewCarImageItems,
   addCarImage,
   uploadCarImage,
-} from "@/services/useStateCars";
+} from "@/services/cars.service";
 
 export default function CrudCars() {
   const params = useParams();

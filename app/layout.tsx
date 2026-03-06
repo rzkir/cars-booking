@@ -4,7 +4,7 @@ import { fontClassName } from "@/helper/fonts/Fonts";
 
 import { metadata } from "@/helper/meta/Metadata";
 
-import { getSession } from "@/lib/get-session";
+import { getSession } from "@/hooks/get-session";
 
 export { metadata };
 
