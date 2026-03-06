@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import { useParams, useRouter } from "next/navigation";
 
 import Link from "next/link";
@@ -12,7 +10,7 @@ import {
   CarImagesSection,
   emptyForm,
   carToForm,
-} from "./CrudHelper";
+} from "./FormHelper";
 
 import { ArrowLeft } from "lucide-react";
 
@@ -24,6 +22,7 @@ import {
   useCarQuery,
   useCreateCarMutation,
   useUpdateCarMutation,
+  useNewCarImageItems,
   addCarImage,
   uploadCarImage,
 } from "@/services/useStateCars";
@@ -34,7 +33,7 @@ export default function CrudCars() {
   const id = String(params.id ?? "");
   const isNew = id === "new";
 
-  const [newImages, setNewImages] = useState<File[]>([]);
+  const [newImageItems, setNewImageItems] = useNewCarImageItems();
 
   const { data: car, isLoading } = useCarQuery(isNew ? null : id);
   const createMutation = useCreateCarMutation();
@@ -44,11 +43,14 @@ export default function CrudCars() {
     if (isNew) {
       const created = await createMutation.mutateAsync(payload);
       if (created) {
-        if (newImages.length > 0) {
-          for (let index = 0; index < newImages.length; index++) {
-            const file = newImages[index];
+        if (newImageItems.length > 0) {
+          for (let index = 0; index < newImageItems.length; index++) {
+            const item = newImageItems[index];
             try {
-              const url = await uploadCarImage(created.id, file);
+              const url =
+                typeof item === "string"
+                  ? item
+                  : await uploadCarImage(created.id, item);
               await addCarImage(created.id, {
                 image_url: url,
                 is_primary: index === 0,
@@ -159,8 +161,8 @@ export default function CrudCars() {
         imagesSection={
           isNew ? (
             <NewCarImagesSection
-              files={newImages}
-              setFiles={setNewImages}
+              items={newImageItems}
+              setItems={setNewImageItems}
               isPending={createMutation.isPending || updateMutation.isPending}
             />
           ) : (

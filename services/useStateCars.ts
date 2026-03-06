@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   useQuery,
   useMutation,
@@ -9,7 +11,7 @@ import {
 
 import { toast } from "sonner";
 
-import { API_CONFIG } from "@/lib/config";
+import { API_CONFIG, getCarsApiHeaders } from "@/lib/config";
 
 export const carsKeys = {
   all: ["cars"] as const,
@@ -31,7 +33,10 @@ async function fetcher<T>(
   const res = await fetch(url, {
     ...options,
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...options?.headers },
+    headers: getCarsApiHeaders({
+      "Content-Type": "application/json",
+      ...(options?.headers as Record<string, string>),
+    }),
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new Error(data?.error ?? "Terjadi kesalahan");
@@ -169,6 +174,14 @@ export function useDeleteCarMutation(
 
 // ========== CAR IMAGES ==========
 
+// ========== NEW CAR IMAGE ITEMS (untuk form tambah mobil) ==========
+
+export function useNewCarImageItems() {
+  return useState<(string | File)[]>([]);
+}
+
+// ========== CAR IMAGES ==========
+
 export const carImagesKeys = {
   all: (carId: string) => [...carsKeys.detail(carId), "images"] as const,
 };
@@ -186,6 +199,7 @@ async function uploadCarImage(carId: string, file: File): Promise<string> {
   const res = await fetch(API_CONFIG.ENDPOINTS.cars.upload(carId), {
     method: "POST",
     credentials: "include",
+    headers: getCarsApiHeaders(),
     body: formData,
   });
   const data = (await res.json().catch(() => null)) as {

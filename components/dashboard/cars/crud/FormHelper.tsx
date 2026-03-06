@@ -41,6 +41,17 @@ import {
 } from "@/components/ui/select";
 
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+import { formatIdrInput, parseIdrInput } from "@/hooks/format-idr";
+
+import {
   useCarImagesQuery,
   useAddCarImageMutation,
   useDeleteCarImageMutation,
@@ -119,9 +130,9 @@ export function CarFormInner({
       name: form.name.trim(),
       slug: form.slug.trim() || undefined,
       description: form.description.trim() || undefined,
-      price_per_day: Number(form.price_per_day),
+      price_per_day: parseIdrInput(form.price_per_day),
       price_with_driver_per_day: form.price_with_driver_per_day.trim()
-        ? Number(form.price_with_driver_per_day.trim())
+        ? parseIdrInput(form.price_with_driver_per_day)
         : undefined,
       transmission: form.transmission,
       capacity: Number(form.capacity),
@@ -225,12 +236,17 @@ export function CarFormInner({
           </FieldLabel>
           <Input
             id="price_per_day"
-            type="number"
-            min={1}
-            value={form.price_per_day}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, price_per_day: e.target.value }))
-            }
+            type="text"
+            inputMode="numeric"
+            value={formatIdrInput(form.price_per_day)}
+            onChange={(e) => {
+              const num = parseIdrInput(e.target.value);
+              setForm((p) => ({
+                ...p,
+                price_per_day: e.target.value.trim() === "" ? "" : String(num),
+              }));
+            }}
+            placeholder="Contoh: Rp 500.000"
             required
           />
         </Field>
@@ -242,15 +258,17 @@ export function CarFormInner({
           </FieldLabel>
           <Input
             id="price_with_driver_per_day"
-            type="number"
-            min={1}
-            value={form.price_with_driver_per_day}
-            onChange={(e) =>
+            type="text"
+            inputMode="numeric"
+            value={formatIdrInput(form.price_with_driver_per_day)}
+            onChange={(e) => {
+              const num = parseIdrInput(e.target.value);
               setForm((p) => ({
                 ...p,
-                price_with_driver_per_day: e.target.value,
-              }))
-            }
+                price_with_driver_per_day:
+                  e.target.value.trim() === "" ? "" : String(num),
+              }));
+            }}
             placeholder="Opsional"
           />
         </Field>
@@ -318,6 +336,7 @@ export function CarFormInner({
             <SelectContent>
               <SelectItem value="bensin">Bensin</SelectItem>
               <SelectItem value="solar">Solar</SelectItem>
+              <SelectItem value="diesel">Diesel</SelectItem>
               <SelectItem value="listrik">Listrik</SelectItem>
               <SelectItem value="hybrid">Hybrid</SelectItem>
             </SelectContent>
@@ -392,31 +411,41 @@ export function CarFormInner({
   );
 }
 
+function getPreviewSrc(item: string | File): string {
+  return typeof item === "string" ? item : URL.createObjectURL(item);
+}
+
 export function NewCarImagesSection({
-  files,
-  setFiles,
+  items,
+  setItems,
   isPending,
 }: {
-  files: File[];
-  setFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  items: (string | File)[];
+  setItems: React.Dispatch<React.SetStateAction<(string | File)[]>>;
   isPending: boolean;
 }) {
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [urlInput, setUrlInput] = useState("");
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+
+  const previewSrcs = React.useMemo(
+    () => items.map((item) => getPreviewSrc(item)),
+    [items],
+  );
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nextFiles = Array.from(e.target.files ?? []).filter((file) =>
       file.type.startsWith("image/"),
     );
     if (nextFiles.length === 0) return;
-
-    setFiles((prev) => [...prev, ...nextFiles]);
-    setPreviews((prev) => [
-      ...prev,
-      ...nextFiles.map((file) => URL.createObjectURL(file)),
-    ]);
-
+    setItems((prev) => [...prev, ...nextFiles]);
     e.target.value = "";
+  };
+
+  const handleAddUrl = () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    setItems((prev) => [...prev, url]);
+    setUrlInput("");
   };
 
   const handlePreviewDragStart = (index: number) => {
@@ -429,41 +458,26 @@ export function NewCarImagesSection({
   ) => {
     e.preventDefault();
     if (draggingIndex === null || draggingIndex === targetIndex) return;
-
-    const currentFiles = [...files];
-    const fromIndex = draggingIndex;
-    const toIndex = targetIndex;
     if (
-      fromIndex < 0 ||
-      fromIndex >= currentFiles.length ||
-      toIndex < 0 ||
-      toIndex >= currentFiles.length
-    ) {
+      draggingIndex < 0 ||
+      draggingIndex >= items.length ||
+      targetIndex < 0 ||
+      targetIndex >= items.length
+    )
       return;
-    }
 
-    const [moved] = currentFiles.splice(fromIndex, 1);
-    currentFiles.splice(toIndex, 0, moved);
-
-    setFiles(currentFiles);
-    setPreviews((prev) => {
-      prev.forEach((url) => URL.revokeObjectURL(url));
-      return currentFiles.map((file) => URL.createObjectURL(file));
+    setItems((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(draggingIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
     });
-
-    setDraggingIndex(toIndex);
+    setDraggingIndex(targetIndex);
   };
 
   const handleSetPrimary = (index: number) => {
-    setFiles((prev) => {
-      if (index <= 0 || index >= prev.length) return prev;
-      const next = [...prev];
-      const [moved] = next.splice(index, 1);
-      next.unshift(moved);
-      return next;
-    });
-    setPreviews((prev) => {
-      if (index <= 0 || index >= prev.length) return prev;
+    if (index <= 0 || index >= items.length) return;
+    setItems((prev) => {
       const next = [...prev];
       const [moved] = next.splice(index, 1);
       next.unshift(moved);
@@ -472,26 +486,26 @@ export function NewCarImagesSection({
   };
 
   const handleRemove = (index: number) => {
-    setFiles((prev) => {
-      const next = [...prev];
-      if (index < 0 || index >= next.length) return prev;
-      next.splice(index, 1);
-      return next;
-    });
-    setPreviews((prev) => {
-      if (index < 0 || index >= prev.length) return prev;
-      URL.revokeObjectURL(prev[index]);
+    if (index < 0 || index >= items.length) return;
+    const item = items[index];
+    setItems((prev) => {
       const next = [...prev];
       next.splice(index, 1);
       return next;
     });
+    if (typeof item !== "string") {
+      const url = getPreviewSrc(item);
+      URL.revokeObjectURL(url);
+    }
   };
 
   React.useEffect(() => {
     return () => {
-      previews.forEach((url) => URL.revokeObjectURL(url));
+      previewSrcs
+        .filter((s) => s.startsWith("blob:"))
+        .forEach(URL.revokeObjectURL);
     };
-  }, [previews]);
+  }, [previewSrcs]);
 
   return (
     <div className="space-y-4 rounded-lg border p-6">
@@ -500,19 +514,44 @@ export function NewCarImagesSection({
           <ImageIcon className="h-4 w-4" />
           Gambar Mobil
         </FieldLabel>
-        <Input
-          id="new-images"
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleImageChange}
-          disabled={isPending}
-        />
-        {previews.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Input
+            id="new-images"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageChange}
+            disabled={isPending}
+            className="sm:max-w-xs"
+          />
+          <div className="flex gap-2 flex-1 min-w-0">
+            <Input
+              type="url"
+              placeholder="Atau masukkan URL gambar (https://...)"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && (e.preventDefault(), handleAddUrl())
+              }
+              disabled={isPending}
+              className="flex-1 min-w-0"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddUrl}
+              disabled={!urlInput.trim() || isPending}
+            >
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Tambah URL</span>
+            </Button>
+          </div>
+        </div>
+        {items.length > 0 && (
           <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {previews.map((src, index) => (
+            {previewSrcs.map((src, index) => (
               <div
-                key={src}
+                key={`img-${index}-${typeof items[index] === "string" ? src : (items[index] as File).name}`}
                 draggable
                 onDragStart={() => handlePreviewDragStart(index)}
                 onDragOver={(e) => handlePreviewDragOver(e, index)}
@@ -521,11 +560,11 @@ export function NewCarImagesSection({
               >
                 <Image
                   src={src}
-                  alt={`Preview {index + 1}`}
+                  alt={`Preview ${index + 1}`}
                   fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 50vw, 25vw"
+                  className="absolute inset-0 w-full h-full object-cover"
                   unoptimized
+                  sizes="(max-width: 640px) 50vw, 25vw"
                 />
                 {index === 0 && (
                   <span className="absolute top-1 left-1 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white">
@@ -568,6 +607,8 @@ export function NewCarImagesSection({
 export function CarImagesSection({ carId }: { carId: string }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+  const [imageIdToDelete, setImageIdToDelete] = useState<string | null>(null);
   const { data: images = [], isLoading } = useCarImagesQuery(carId);
   const [localImages, setLocalImages] = useState<CarImage[]>([]);
   const previousImagesRef = React.useRef<CarImage[] | null>(null);
@@ -643,6 +684,21 @@ export function CarImagesSection({ carId }: { carId: string }) {
     }
   };
 
+  const handleAddByUrl = async () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    setUploading(true);
+    try {
+      await addMutation.mutateAsync({
+        image_url: url,
+        is_primary: localImages.length === 0,
+      });
+      setUrlInput("");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleDragStart = (id: string) => {
     setDraggingId(id);
   };
@@ -687,111 +743,173 @@ export function CarImagesSection({ carId }: { carId: string }) {
     } catch {}
   };
 
+  const handleConfirmDelete = () => {
+    if (imageIdToDelete) {
+      deleteMutation.mutate(imageIdToDelete);
+      setImageIdToDelete(null);
+    }
+  };
+
   return (
-    <div className="space-y-4 rounded-lg border p-6">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Gambar Mobil</h3>
-        <div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-            disabled={uploading}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {uploading ? "Mengupload..." : "Tambah Gambar"}
-          </Button>
-        </div>
-      </div>
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Memuat gambar...</p>
-      ) : localImages.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Belum ada gambar. Klik &quot;Tambah Gambar&quot; atau drag &amp; drop
-          gambar ke area ini untuk mengupload.
-        </p>
-      ) : (
-        <div
-          className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 rounded-lg border-dashed ${
-            isDragOver
-              ? "border-2 border-primary bg-primary/5"
-              : "border border-transparent"
-          }`}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragOver(true);
-          }}
-          onDragLeave={(e) => {
-            if ((e.target as HTMLElement).closest("[data-dropzone]")) return;
-            setIsDragOver(false);
-          }}
-          onDrop={handleDropUpload}
-          data-dropzone
-        >
-          {localImages.map((img) => (
-            <div
-              key={img.id}
-              draggable
-              onDragStart={() => handleDragStart(img.id)}
-              onDragOver={(e) => handleDragOverItem(e, img.id)}
-              onDrop={handleDropReorder}
-              onDragEnd={handleDropReorder}
-              className="relative aspect-video rounded-lg border bg-muted overflow-hidden group cursor-move"
+    <>
+      <Dialog
+        open={!!imageIdToDelete}
+        onOpenChange={(open) => !open && setImageIdToDelete(null)}
+      >
+        <DialogContent showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Hapus gambar?</DialogTitle>
+            <DialogDescription>
+              Gambar ini akan dihapus dari mobil. Tindakan ini tidak dapat
+              dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter showCloseButton={false}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setImageIdToDelete(null)}
             >
-              <Image
-                src={img.image_url}
-                alt=""
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 50vw, 25vw"
-                unoptimized
+              Batal
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Menghapus..." : "Hapus"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <div className="space-y-4 rounded-lg border p-6">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="font-semibold">Gambar Mobil</h3>
+            <div className="flex flex-wrap gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+                disabled={uploading}
               />
-              {img.is_primary && (
-                <span className="absolute top-1 left-1 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                  Utama
-                </span>
-              )}
-              <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                {!img.is_primary && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {uploading ? "Mengupload..." : "Upload File"}
+              </Button>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Input
+              type="url"
+              placeholder="Atau masukkan URL gambar (https://...)"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && (e.preventDefault(), handleAddByUrl())
+              }
+              disabled={uploading}
+              className="flex-1 min-w-[200px]"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddByUrl}
+              disabled={!urlInput.trim() || uploading}
+            >
+              Tambah dari URL
+            </Button>
+          </div>
+        </div>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Memuat gambar...</p>
+        ) : localImages.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Belum ada gambar. Klik &quot;Tambah Gambar&quot; atau drag &amp;
+            drop gambar ke area ini untuk mengupload.
+          </p>
+        ) : (
+          <div
+            className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 rounded-lg border-dashed ${
+              isDragOver
+                ? "border-2 border-primary bg-primary/5"
+                : "border border-transparent"
+            }`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragOver(true);
+            }}
+            onDragLeave={(e) => {
+              if ((e.target as HTMLElement).closest("[data-dropzone]")) return;
+              setIsDragOver(false);
+            }}
+            onDrop={handleDropUpload}
+            data-dropzone
+          >
+            {localImages.map((img) => (
+              <div
+                key={img.id}
+                draggable
+                onDragStart={() => handleDragStart(img.id)}
+                onDragOver={(e) => handleDragOverItem(e, img.id)}
+                onDrop={handleDropReorder}
+                onDragEnd={handleDropReorder}
+                className="relative aspect-video rounded-lg border bg-muted overflow-hidden group cursor-move"
+              >
+                <Image
+                  src={img.image_url}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 50vw, 25vw"
+                  unoptimized
+                />
+                {img.is_primary && (
+                  <span className="absolute top-1 left-1 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                    Utama
+                  </span>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {!img.is_primary && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setPrimaryMutation.mutate(img.id)}
+                      disabled={setPrimaryMutation.isPending}
+                      title="Jadikan utama"
+                    >
+                      <Star className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     type="button"
-                    variant="secondary"
+                    variant="destructive"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => setPrimaryMutation.mutate(img.id)}
-                    disabled={setPrimaryMutation.isPending}
-                    title="Jadikan utama"
+                    onClick={() => setImageIdToDelete(img.id)}
+                    disabled={deleteMutation.isPending}
+                    title="Hapus"
                   >
-                    <Star className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => {
-                    if (confirm("Hapus gambar?")) deleteMutation.mutate(img.id);
-                  }}
-                  disabled={deleteMutation.isPending}
-                  title="Hapus"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

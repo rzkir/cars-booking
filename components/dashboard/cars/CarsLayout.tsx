@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Link from "next/link";
 
@@ -44,18 +44,44 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty";
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+
 import { useCarsQuery, useDeleteCarMutation } from "@/services/useStateCars";
 
 import { formatIdr } from "@/hooks/format-idr";
 
+const PAGE_SIZE = 9;
+
+function getPaginationRange(current: number, total: number): (number | "ellipsis")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 3) return [1, 2, 3, 4, "ellipsis", total];
+  if (current >= total - 2)
+    return [1, "ellipsis", total - 3, total - 2, total - 1, total];
+  return [1, "ellipsis", current - 1, current, current + 1, "ellipsis", total];
+}
+
 export default function CarsPage() {
-  const { data, isLoading } = useCarsQuery();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useCarsQuery({ page, pageSize: PAGE_SIZE });
   const cars = data?.data ?? [];
+  const pagination = data?.pagination;
   const deleteMutation = useDeleteCarMutation();
   const [carToDelete, setCarToDelete] = useState<{
     id: string;
     name: string;
   } | null>(null);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
 
   const openDeleteDialog = (id: string, name: string) => {
     setCarToDelete({ id, name });
@@ -228,6 +254,69 @@ export default function CarsPage() {
                 </Card>
               );
             })}
+          </div>
+        )}
+
+        {!isLoading && cars.length > 0 && pagination && pagination.totalPages > 1 && (
+          <div className="border-t px-4 py-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (pagination.hasPrevPage && pagination.prevPage != null)
+                        setPage(pagination.prevPage);
+                    }}
+                    className={
+                      !pagination.hasPrevPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+                {getPaginationRange(
+                  pagination.currentPage,
+                  pagination.totalPages,
+                ).map((item, i) =>
+                  item === "ellipsis" ? (
+                    <PaginationItem key={`ellipsis-${i}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem key={item}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setPage(item);
+                        }}
+                        isActive={item === pagination.currentPage}
+                        className="cursor-pointer"
+                      >
+                        {item}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ),
+                )}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (pagination.hasNextPage && pagination.nextPage != null)
+                        setPage(pagination.nextPage);
+                    }}
+                    className={
+                      !pagination.hasNextPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
       </div>
