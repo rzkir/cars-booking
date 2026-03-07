@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 import {
   useQuery,
+  useInfiniteQuery,
   useMutation,
   useQueryClient,
   type UseMutationOptions,
@@ -170,6 +171,50 @@ export function useCarsQuery(params?: {
   return useQuery({
     queryKey: carsKeys.list(params),
     queryFn: () => fetchCars(params),
+  });
+}
+
+export const CARS_PUBLIC_PAGE_SIZE = 12;
+
+export function useInfiniteCarsQuery(params?: {
+  search?: string;
+  fuel_type?: string;
+  rental_type?: string;
+  transmission?: string;
+  initialData?: CarsListResponse;
+}) {
+  const { initialData, ...queryParams } = params ?? {};
+  return useInfiniteQuery({
+    queryKey: [...carsKeys.lists(), "infinite", queryParams] as const,
+    queryFn: ({ pageParam }) =>
+      fetchCars({
+        page: pageParam,
+        pageSize: CARS_PUBLIC_PAGE_SIZE,
+        ...(queryParams.search && { search: queryParams.search }),
+        ...(queryParams.fuel_type && { fuel_type: queryParams.fuel_type }),
+        ...(queryParams.rental_type && {
+          rental_type: queryParams.rental_type,
+        }),
+        ...(queryParams.transmission && {
+          transmission: queryParams.transmission,
+        }),
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination.hasNextPage
+        ? lastPage.pagination.nextPage
+        : undefined,
+    initialData:
+      initialData &&
+      !queryParams.search &&
+      !queryParams.rental_type &&
+      !queryParams.fuel_type &&
+      !queryParams.transmission
+        ? {
+            pages: [initialData],
+            pageParams: [1],
+          }
+        : undefined,
   });
 }
 

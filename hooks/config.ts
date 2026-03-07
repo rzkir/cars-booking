@@ -43,6 +43,13 @@ export const API_CONFIG = {
       byId: (id: string) => `${API_BASE_URL}/api/facilities/${id}`,
     },
   },
+  /** Opsi Lokasi untuk filter pencarian mobil (Quick Search) */
+  LOCATION_OPTIONS: [
+    { value: "jakarta-selatan", label: "Jakarta Selatan" },
+    { value: "jakarta-barat", label: "Jakarta Barat" },
+    { value: "tangerang", label: "Tangerang" },
+    { value: "bekasi", label: "Bekasi" },
+  ] as const,
   SECRET: API_SECRET,
 };
 

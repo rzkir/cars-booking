@@ -1,93 +1,127 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
-  Calendar,
-  MapPin,
+  Search as SearchIcon,
   User,
-  Search,
   X,
   HelpCircle,
   MessageCircle,
-  RefreshCw,
 } from "lucide-react";
 
-import { CarCard } from "@/components/ui/cars/card";
+import CarsGridWithLoadMore from "./CarsGridWithLoadMore";
 
-export default function CarsLayout({ cars }: { cars: CarListItem[] }) {
+const RENTAL_TYPE_OPTIONS = [
+  { value: "all", label: "Semua" },
+  { value: "self_drive", label: "Lepas Kunci" },
+  { value: "with_driver", label: "Dengan Supir" },
+] as const;
+
+export default function CarsLayout({
+  initialCarsData,
+  initialSearch,
+  initialRentalType,
+}: {
+  initialCarsData: CarsListResponse;
+  initialSearch?: string;
+  initialRentalType?: "self_drive" | "with_driver";
+}) {
+  const [searchInput, setSearchInput] = useState(initialSearch ?? "");
+  const [appliedSearch, setAppliedSearch] = useState(initialSearch ?? "");
+  const [rentalTypeSelect, setRentalTypeSelect] =
+    useState<(typeof RENTAL_TYPE_OPTIONS)[number]["value"]>(
+      initialRentalType ?? "all",
+    );
+  const [appliedRentalType, setAppliedRentalType] = useState<
+    "all" | "self_drive" | "with_driver"
+  >(initialRentalType ?? "all");
+
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const updateUrl = (search: string, rentalType: "all" | "self_drive" | "with_driver") => {
+    const params = new URLSearchParams();
+    if (search) params.set("q", search);
+    if (rentalType && rentalType !== "all") params.set("rental_type", rentalType);
+    const query = params.toString();
+    const url = query ? `${pathname}?${query}` : pathname;
+    router.replace(url, { scroll: false });
+  };
+
+  const handlePerbarui = () => {
+    const normalizedSearch = searchInput.trim().replace(/\s+/g, " ");
+    setSearchInput(normalizedSearch);
+    setAppliedSearch(normalizedSearch);
+    setAppliedRentalType(rentalTypeSelect);
+    updateUrl(normalizedSearch, rentalTypeSelect);
+  };
   return (
     <main className="pt-24 pb-20 bg-[#fcfcfc] min-h-screen flex flex-col">
-      {/* Quick Search Bar */}
-      <div className="bg-white border-b border-gray-100 py-6 mb-10">
-        <div className="container mx-auto px-6">
-          <div className="bg-gray-50 p-4 rounded-2xl grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4 items-end">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-                Lokasi
-              </label>
-              <div className="relative">
-                <select className="w-full bg-white border border-gray-100 rounded-xl py-3 px-10 appearance-none focus:ring-2 focus:ring-orange-100 outline-none font-bold text-sm">
-                  <option>Jakarta Selatan</option>
-                  <option>Jakarta Barat</option>
-                  <option>Tangerang</option>
-                  <option>Bekasi</option>
-                </select>
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-                Tgl Mulai
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  defaultValue="2024-05-20"
-                  className="w-full bg-white border border-gray-100 rounded-xl py-3 px-10 focus:ring-2 focus:ring-orange-100 outline-none font-bold text-sm"
-                />
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-                Tgl Selesai
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  defaultValue="2024-05-22"
-                  className="w-full bg-white border border-gray-100 rounded-xl py-3 px-10 focus:ring-2 focus:ring-orange-100 outline-none font-bold text-sm"
-                />
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-                Tipe Sewa
-              </label>
-              <div className="relative">
-                <select className="w-full bg-white border border-gray-100 rounded-xl py-3 px-10 appearance-none focus:ring-2 focus:ring-orange-100 outline-none font-bold text-sm">
-                  <option>Lepas Kunci</option>
-                  <option>Dengan Supir</option>
-                </select>
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              </div>
-            </div>
-
-            <button className="bg-[#1a1a1a] text-white h-[46px] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all active:scale-95">
-              <Search className="w-4 h-4" />
-              <span>Perbarui</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Content */}
       <div className="flex-1">
         <div className="container mx-auto px-6">
           <div className="flex flex-col lg:flex-row gap-10">
             {/* Sidebar Filters */}
             <aside className="w-full lg:w-72 space-y-8">
+              {/* Search + Rental Type */}
+              <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)]">
+                <h3 className="text-lg font-black mb-6">Pencarian</h3>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
+                      Cari mobil
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handlePerbarui()}
+                        placeholder="Nama mobil..."
+                        className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 px-10 focus:ring-2 focus:ring-orange-100 outline-none font-bold text-sm placeholder:text-gray-400"
+                      />
+                      <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
+                      Tipe Sewa
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={rentalTypeSelect}
+                        onChange={(e) =>
+                          setRentalTypeSelect(
+                            e.target
+                              .value as (typeof RENTAL_TYPE_OPTIONS)[number]["value"],
+                          )
+                        }
+                        className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 px-10 appearance-none focus:ring-2 focus:ring-orange-100 outline-none font-bold text-sm"
+                      >
+                        {RENTAL_TYPE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handlePerbarui}
+                    className="bg-[#1a1a1a] text-white h-[46px] w-full rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all active:scale-95"
+                  >
+                    <SearchIcon className="w-4 h-4" />
+                    <span>Perbarui</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)]">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-black">Filter</h3>
@@ -207,81 +241,87 @@ export default function CarsLayout({ cars }: { cars: CarListItem[] }) {
 
             {/* Results Content */}
             <div className="flex-1">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div className="space-y-1">
-                  <h2 className="text-2xl font-black tracking-tight">
-                    Hasil Pencarian Mobil
-                  </h2>
-                  <p className="text-sm text-gray-400 font-medium">
-                    Menampilkan 12 armada tersedia di{" "}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-black tracking-tight">
+                  Hasil Pencarian Mobil
+                </h2>
+                <p className="text-sm text-gray-400 font-medium">
+                  Menampilkan armada{" "}
+                  {appliedRentalType !== "all" && (
                     <span className="text-black font-bold">
-                      Jakarta Selatan
+                      {appliedRentalType === "self_drive"
+                        ? "Lepas Kunci"
+                        : "Dengan Supir"}{" "}
                     </span>
-                  </p>
-                </div>
+                  )}
+                  tersedia
+                </p>
+              </div>
 
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                    Urutkan:
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  Urutkan:
+                </span>
+                <select className="bg-white border border-gray-100 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-orange-100 outline-none font-bold text-sm">
+                  <option>Harga Terendah</option>
+                  <option>Harga Tertinggi</option>
+                  <option>Terpopuler</option>
+                  <option>Terbaru</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Applied Filters Summary */}
+            <div className="flex flex-wrap gap-2 mb-8">
+              {appliedSearch && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-[#FF9500] rounded-full text-xs font-bold">
+                  <span>&quot;{appliedSearch}&quot;</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput("");
+                      setAppliedSearch("");
+                      updateUrl("", appliedRentalType);
+                    }}
+                    className="hover:text-black"
+                    aria-label="Hapus filter pencarian"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              {appliedRentalType !== "all" && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-[#FF9500] rounded-full text-xs font-bold">
+                  <span>
+                    {appliedRentalType === "self_drive"
+                      ? "Lepas Kunci"
+                      : "Dengan Supir"}
                   </span>
-                  <select className="bg-white border border-gray-100 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-orange-100 outline-none font-bold text-sm">
-                    <option>Harga Terendah</option>
-                    <option>Harga Tertinggi</option>
-                    <option>Terpopuler</option>
-                    <option>Terbaru</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Applied Filters Summary */}
-              <div className="flex flex-wrap gap-2 mb-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-[#FF9500] rounded-full text-xs font-bold">
-                  <span>Automatic</span>
-                  <button className="hover:text-black">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAppliedRentalType("all");
+                      setRentalTypeSelect("all");
+                      updateUrl(appliedSearch, "all");
+                    }}
+                    className="hover:text-black"
+                    aria-label="Hapus filter Tipe Sewa"
+                  >
                     <X className="w-3 h-3" />
                   </button>
                 </div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-[#FF9500] rounded-full text-xs font-bold">
-                  <span>Rp 300k - 800k</span>
-                  <button className="hover:text-black">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
+              )}
+            </div>
 
-              {/* Car Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {cars.map((car) => (
-                  <CarCard
-                    key={car.id}
-                    image={car.car_images?.image_url ?? ""}
-                    title={car.name}
-                    subtitle={`${car.capacity} Kursi • ${
-                      car.rental_type === "with_driver"
-                        ? "Dengan Sopir"
-                        : "Lepas Kunci"
-                    }`}
-                    price={car.price_per_day.toString()}
-                    status={car.status}
-                    transmission={car.transmission}
-                    fuel={car.fuel_type ?? ""}
-                    slug={car.slug}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              <div className="mt-16 flex flex-col items-center gap-6">
-                <button className="px-10 py-4 bg-white border border-gray-100 rounded-2xl font-black text-sm shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] hover:bg-gray-50 transition-all flex items-center gap-3 group">
-                  Muat Lebih Banyak
-                  <RefreshCw className="group-hover:rotate-180 transition-transform duration-500 w-4 h-4" />
-                </button>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#1a1a1a]" />
-                  <span className="w-2 h-2 rounded-full bg-gray-200" />
-                  <span className="w-2 h-2 rounded-full bg-gray-200" />
-                </div>
-              </div>
+            {/* Car Grid + Load More */}
+            <CarsGridWithLoadMore
+              initialData={initialCarsData}
+              search={appliedSearch || undefined}
+              rentalType={
+                appliedRentalType === "all" ? undefined : appliedRentalType
+              }
+            />
             </div>
           </div>
         </div>

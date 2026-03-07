@@ -83,3 +83,12 @@ type CarsListResponse = {
     totalPages: number;
   };
 };
+
+//==================================== Cars Search ====================================//
+
+type CarSearchItem = CarListItem;
+
+type CarsSearchResponse = {
+  data: CarSearchItem[];
+  pagination: CarsListResponse["pagination"];
+};

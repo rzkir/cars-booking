@@ -22,6 +22,9 @@ const publicPaths = [
 
 const adminPaths = ["/dashboard"];
 
+/** Path yang hanya boleh diakses oleh customer (bukan admin) */
+const customerOnlyPaths = ["/profile"];
+
 /** Nama cookie session dari backend (be: session_token, httpOnly) */
 const SESSION_COOKIE_NAME = "session_token";
 
@@ -147,6 +150,25 @@ export default async function proxy(request: NextRequest) {
     }
     // Customer akses /dashboard → redirect ke /
     if (userRole !== "admin") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // /profile hanya untuk customer
+  const isCustomerOnlyPath = customerOnlyPaths.some((path) =>
+    pathname.startsWith(path)
+  );
+  if (isCustomerOnlyPath) {
+    if (!isAuthenticated) {
+      return NextResponse.redirect(new URL("/signin", request.url));
+    }
+    // Admin akses /profile → redirect ke /dashboard
+    if (userRole === "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    // Role null/unknown → redirect ke /
+    if (userRole !== "customer") {
       return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
