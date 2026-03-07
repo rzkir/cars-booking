@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
+
 import Link from "next/link";
 
-import {
-  Award,
-  ChevronDown,
-  ChevronRight,
-  Copy,
-  LogOut,
-  Save,
-  UserCog,
-} from "lucide-react";
+import { Award, ChevronRight, Copy, LogOut } from "lucide-react";
 
 import { getSession } from "@/hooks/get-session";
+
+import { API_CONFIG, getCarsApiHeaders } from "@/hooks/config";
+
+import EditProfileForm from "@/components/profile/EditProfileForm";
+
+import { AccountStoreProvider } from "@/services/accounts.service";
 
 export const metadata: Metadata = {
   title: "Edit Profil - DriveEase Indonesia",
@@ -24,8 +23,106 @@ const cardShadow =
 const formInputClass =
   "w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none font-bold transition-all focus:border-[#FF9500] focus:bg-white";
 
+async function getCustomerProfile(): Promise<{
+  id: string;
+  account_id: string;
+  full_name: string;
+  email: string | null;
+  phone: string;
+  birth_date: string | null;
+  gender: "male" | "female" | null;
+  id_type: string;
+  id_number: string | null;
+  image_ktp: string | null;
+  image_sim_a: string | null;
+  image_selfie_ktp: string | null;
+  is_verified: boolean;
+  verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+} | null> {
+  const apiUrl = API_CONFIG.ENDPOINTS.customerProfiles.me;
+  if (!apiUrl?.trim()) return null;
+
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  if (!cookieHeader) return null;
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        cookie: cookieHeader,
+        "Content-Type": "application/json",
+        ...getCarsApiHeaders(),
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function getLocations(): Promise<
+  {
+    id: string;
+    customer_id: string;
+    label: string | null;
+    address: string;
+    latitude: number;
+    longitude: number;
+    is_default: boolean;
+    created_at: string;
+    updated_at: string;
+  }[]
+> {
+  const apiUrl = API_CONFIG.ENDPOINTS.customerLocations.base;
+  if (!apiUrl?.trim()) return [];
+
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  if (!cookieHeader) return [];
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        cookie: cookieHeader,
+        "Content-Type": "application/json",
+        ...getCarsApiHeaders(),
+      },
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      data?: {
+        id: string;
+        customer_id: string;
+        label: string | null;
+        address: string;
+        latitude: number;
+        longitude: number;
+        is_default: boolean;
+        created_at: string;
+        updated_at: string;
+      }[];
+    };
+    return json?.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function Page() {
   const user = (await getSession())!;
+  const profile = await getCustomerProfile();
+  const locations = await getLocations();
 
   return (
     <div>
@@ -35,157 +132,18 @@ export default async function Page() {
           <div
             className={`bg-white rounded-[2rem] p-8 md:p-10 border border-gray-100 ${cardShadow}`}
           >
-            <div className="flex items-center justify-between mb-10">
-              <h3 className="text-xl font-black flex items-center gap-3">
-                <UserCog className="w-6 h-6 text-[#FF9500]" />
-                Informasi Personal
-              </h3>
-              <p className="text-xs font-bold text-gray-400">
-                *Data Anda terjamin aman
-              </p>
-            </div>
-
-            <form className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
-                    Nama Lengkap
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={user.name || ""}
-                    className={formInputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
-                    Alamat Email
-                  </label>
-                  <input
-                    type="email"
-                    defaultValue={user.email || ""}
-                    className={formInputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
-                    Nomor WhatsApp
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <div className="px-5 py-4 bg-gray-100 rounded-2xl font-black text-gray-400">
-                      +62
-                    </div>
-                    <input
-                      type="tel"
-                      defaultValue="81298765432"
-                      className={`${formInputClass} flex-1`}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
-                    Tanggal Lahir
-                  </label>
-                  <input
-                    type="date"
-                    defaultValue="1992-05-14"
-                    className={formInputClass}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
-                  Jenis Kelamin
-                </label>
-                <div className="flex gap-8 mt-2">
-                  <label className="flex items-center gap-3 cursor-pointer font-bold group">
-                    <div className="relative flex items-center justify-center w-6 h-6 rounded-full border-2 border-gray-200 group-hover:border-[#FF9500] transition-colors">
-                      <input
-                        type="radio"
-                        name="gender"
-                        defaultChecked
-                        className="peer absolute opacity-0 cursor-pointer"
-                      />
-                      <div className="w-3 h-3 rounded-full bg-[#FF9500] opacity-0 peer-checked:opacity-100 transition-opacity" />
-                    </div>
-                    Laki-laki
-                  </label>
-                  <label className="flex items-center gap-3 cursor-pointer font-bold group">
-                    <div className="relative flex items-center justify-center w-6 h-6 rounded-full border-2 border-gray-200 group-hover:border-[#FF9500] transition-colors">
-                      <input
-                        type="radio"
-                        name="gender"
-                        className="peer absolute opacity-0 cursor-pointer"
-                      />
-                      <div className="w-3 h-3 rounded-full bg-[#FF9500] opacity-0 peer-checked:opacity-100 transition-opacity" />
-                    </div>
-                    Perempuan
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
-                  Alamat Lengkap Domisili
-                </label>
-                <textarea
-                  rows={4}
-                  defaultValue="Jl. Jenderal Sudirman No. 45, Apartemen Senayan City Tower A No. 12, Jakarta Selatan, 12190"
-                  className={`${formInputClass} resize-none`}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
-                    Tipe Identitas (ID)
-                  </label>
-                  <div className="relative">
-                    <select
-                      className={`${formInputClass} appearance-none cursor-pointer pr-12`}
-                    >
-                      <option>Kartu Tanda Penduduk (KTP)</option>
-                      <option>Passport</option>
-                      <option>SIM A</option>
-                    </select>
-                    <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
-                    Nomor Identitas
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue="3174123456780001"
-                    className={formInputClass}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-10 flex flex-col sm:flex-row gap-4">
-                <button
-                  id="btn-save-profile-form"
-                  type="submit"
-                  className="px-10 py-5 bg-[#1a1a1a] text-white rounded-2xl font-black text-sm hover:scale-[1.02] active:scale-95 transition-transform shadow-xl shadow-black/10 flex items-center justify-center gap-2"
-                  style={{
-                    transitionTimingFunction:
-                      "cubic-bezier(0.34, 1.56, 0.64, 1)",
-                  }}
-                >
-                  <Save className="w-5 h-5" />
-                  Simpan Perubahan
-                </button>
-                <Link
-                  href="/profile"
-                  id="btn-cancel-profile-form"
-                  className="px-10 py-5 bg-white text-gray-400 rounded-2xl font-black text-sm hover:text-gray-600 border border-transparent hover:border-gray-100 transition-all text-center"
-                >
-                  Batalkan
-                </Link>
-              </div>
-            </form>
+            <AccountStoreProvider
+              defaultIdType={profile?.id_type ?? "ktp"}
+              defaultIdNumber={profile?.id_number ?? ""}
+            >
+              <EditProfileForm
+                user={user}
+                profile={profile}
+                initialLocations={locations}
+                formInputClass={formInputClass}
+                cardShadow={cardShadow}
+              />
+            </AccountStoreProvider>
           </div>
         </div>
 
@@ -239,7 +197,9 @@ export default async function Page() {
           </div>
 
           {/* Kode Referral */}
-          <div className={`bg-white rounded-[2rem] p-8 border border-gray-100 ${cardShadow}`}>
+          <div
+            className={`bg-white rounded-[2rem] p-8 border border-gray-100 ${cardShadow}`}
+          >
             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6">
               Kode Referral Anda
             </h4>
@@ -264,7 +224,9 @@ export default async function Page() {
           </div>
 
           {/* Bantuan & Dukungan */}
-          <div className={`bg-white rounded-[2rem] p-8 border border-gray-100 ${cardShadow} space-y-6`}>
+          <div
+            className={`bg-white rounded-[2rem] p-8 border border-gray-100 ${cardShadow} space-y-6`}
+          >
             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">
               Bantuan & Dukungan
             </h4>

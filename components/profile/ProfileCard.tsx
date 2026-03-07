@@ -1,6 +1,6 @@
-import Image from "next/image";
+import { MapPin, Pencil } from "lucide-react";
 
-import { Camera, MapPin, Pencil } from "lucide-react";
+import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
 
 const cardShadow =
   "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100";
@@ -24,8 +24,18 @@ function formatJoinedDate(createdAt: string | null | undefined): string {
   const d = new Date(createdAt);
   if (Number.isNaN(d.getTime())) return "-";
   const months = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
   ];
   return `${months[d.getMonth()]} ${d.getFullYear()}`;
 }
@@ -46,25 +56,7 @@ export default function ProfileCard({
     >
       <div className="flex flex-col md:flex-row items-center gap-8 justify-between">
         <div className="flex flex-col md:flex-row items-center gap-8">
-          <div className="relative group">
-            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-orange-50 shadow-xl">
-              <Image
-                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80"
-                alt={user.name || "Avatar pengguna"}
-                width={128}
-                height={128}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-            </div>
-            <button
-              id="btn-change-avatar-main"
-              type="button"
-              className="absolute bottom-0 right-0 w-10 h-10 bg-[#FF9500] text-white rounded-full flex items-center justify-center border-4 border-white shadow-lg hover:bg-[#E68600] transition-colors"
-              aria-label="Ubah foto profil"
-            >
-              <Camera className="w-5 h-5" />
-            </button>
-          </div>
+          <ProfilePictureUpload user={user} />
           <div className="text-center md:text-left space-y-2">
             <h1
               id="profile-summary-heading"

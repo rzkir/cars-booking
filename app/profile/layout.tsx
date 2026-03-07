@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 
 import { redirect } from "next/navigation";
 
+import type { Metadata } from "next";
+
 import ProfileHeader from "@/components/ui/profile/ProfileHeader";
 
 import { getSession } from "@/hooks/get-session";
@@ -12,11 +14,25 @@ import Link from "next/link";
 
 import { ArrowLeft } from "lucide-react";
 
-export default async function ProfileLayout({
-  children,
-}: {
+interface ProfileLayoutProps {
   children: ReactNode;
-}) {
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await getSession();
+  if (!user) {
+    return {
+      title: "Profile - DriveEase Indonesia",
+      description: "Kelola profil dan pengaturan akun di DriveEase Indonesia",
+    };
+  }
+  return {
+    title: `${user.name} - DriveEase Indonesia`,
+    description: `Kelola profil dan pengaturan akun ${user.name} di DriveEase Indonesia`,
+  };
+}
+
+export default async function ProfileLayout({ children }: ProfileLayoutProps) {
   const user = await getSession();
 
   if (!user) {

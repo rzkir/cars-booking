@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-import ProfileCard from "./ProfileCard";
+import ProfileCard from "@/components/profile/ProfileCard";
 
 export default function ProfileHeader({ user }: { user: Accounts }) {
   const pathname = usePathname();

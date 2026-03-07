@@ -1,18 +1,109 @@
+enum UserRole {
+  CUSTOMER = "customer",
+  ADMIN = "admin",
+}
+
 interface Accounts {
   id: string;
   name: string;
   email: string;
   phone: string;
   role: UserRole;
+  picture?: string;
   created_at: string;
   updated_at: string;
 }
 
-enum UserRole {
-  CUSTOMER = "customer",
-  ADMIN = "admin",
+interface CustomerLocation {
+  id: string;
+  customer_id: string;
+  label: string | null;
+  address: string;
+  latitude: number;
+  longitude: number;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
+interface ProfileLocationsClientProps {
+  initialLocations: CustomerLocation[];
+  cardShadow: string;
+  onLocationAdded?: () => void;
+}
+
+interface LocationResult {
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+interface LocationPickerProps {
+  /** Initial center [lat, lng] */
+  center?: [number, number];
+  /** Initial zoom */
+  zoom?: number;
+  /** Called when user selects a location from search */
+  onSelect: (result: LocationResult) => void;
+  /** Height of the map container (default 320px) */
+  height?: string;
+  /** Optional: show search bar label */
+  searchLabel?: string;
+}
+
+interface GeoSearchHandlerProps {
+  onSelect: (result: LocationResult) => void;
+  searchLabel?: string;
+}
+
+interface CustomerProfile {
+  id: string;
+  account_id: string;
+  full_name: string;
+  email: string | null;
+  phone: string;
+  birth_date: string | null;
+  gender: "male" | "female" | null;
+  id_type: string;
+  id_number: string | null;
+  image_ktp: string | null;
+  image_sim_a: string | null;
+  image_selfie_ktp: string | null;
+  is_verified: boolean;
+  verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CustomerLocation {
+  id: string;
+  customer_id: string;
+  label: string | null;
+  address: string;
+  latitude: number;
+  longitude: number;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface EditProfileFormProps {
+  user: Accounts;
+  profile: CustomerProfile | null;
+  initialLocations: CustomerLocation[];
+  formInputClass: string;
+  cardShadow: string;
+}
+
+const ID_TYPE_OPTIONS = [
+  { value: "ktp", label: "Kartu Tanda Penduduk (KTP)" },
+  { value: "passport", label: "Passport" },
+  { value: "sim_a", label: "SIM A" },
+];
+
+type DocType = "ktp" | "sim_a" | "selfie_ktp";
+
+//====================== AuthContext ======================//
 interface AuthContextType {
   user: Accounts | null;
   loading: boolean;

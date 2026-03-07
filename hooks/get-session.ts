@@ -17,6 +17,7 @@ function accountToUser(
     name: String(account.name ?? ""),
     email: String(account.email ?? ""),
     phone: String(account.phone ?? ""),
+    picture: account.picture ? String(account.picture) : undefined,
     role: role as UserRole,
     created_at: String(account.created_at ?? ""),
     updated_at: String(account.updated_at ?? ""),

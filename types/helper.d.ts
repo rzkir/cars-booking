@@ -112,3 +112,90 @@ interface Car {
   car_pricings?: CarPricing[];
   car_images?: CarImage[];
 }
+
+//==================================== OCR ====================================//
+type DocTypeOcr = "ktp" | "sim_a" | "selfie_ktp";
+
+const KTP_KEYWORDS = [
+  "KTP",
+  "NIK",
+  "REPUBLIK",
+  "INDONESIA",
+  "KARTU TANDA PENDUDUK",
+  "PROVINSI",
+  "KABUPATEN",
+  "KOTA",
+  "KECAMATAN",
+  "KELURAHAN",
+  "DESA",
+  "ALAMAT",
+  "RT",
+  "RW",
+];
+
+const SIM_KEYWORDS = [
+  "SIM",
+  "SURAT IZIN MENGEMUDI",
+  "KEMENTERIAN",
+  "PERHUBUNGAN",
+  "DRIVING",
+  "LICENSE",
+  " NAMA ",
+  "BERLAKU",
+];
+
+const SELFIE_KTP_KEYWORDS = [
+  "KTP",
+  "NIK",
+  "REPUBLIK",
+  "INDONESIA",
+  "KARTU",
+  "PROVINSI",
+];
+
+interface KtpExtractedData {
+  full_name?: string;
+  birth_date?: string;
+  gender?: "male" | "female";
+  id_number?: string;
+}
+
+type ValidateDocumentResult = {
+  valid: boolean;
+  message?: string;
+  ktpData?: KtpExtractedData;
+  simData?: KtpExtractedData;
+};
+
+//==================================== OCR ====================================//
+type DocType = "ktp" | "sim_a" | "selfie_ktp";
+
+interface AccountStoreState {
+  step: 1 | 2;
+  setStep: (step: 1 | 2) => void;
+  uploadingDoc: DocType | null;
+  setUploadingDoc: (t: DocType | null) => void;
+  ktpExtractedData: KtpExtractedData | null;
+  setKtpExtractedData: (d: KtpExtractedData | null) => void;
+  simExtractedData: KtpExtractedData | null;
+  setSimExtractedData: (d: KtpExtractedData | null) => void;
+  showVerifiedModal: boolean;
+  setShowVerifiedModal: (v: boolean) => void;
+  idTypeState: string;
+  setIdTypeState: (v: string) => void;
+  idNumberState: string;
+  setIdNumberState: (v: string) => void;
+  addingLocation: boolean;
+  setAddingLocation: (v: boolean) => void;
+  newLabel: string;
+  setNewLabel: (v: string) => void;
+  newAddress: string;
+  setNewAddress: (v: string) => void;
+  pickedLocation: LocationResult | null;
+  setPickedLocation: (v: LocationResult | null) => void;
+  newIsDefault: boolean;
+  setNewIsDefault: (v: boolean) => void;
+  deletingLocationId: string | null;
+  setDeletingLocationId: (v: string | null) => void;
+  resetAddLocationForm: () => void;
+}

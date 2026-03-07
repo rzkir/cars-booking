@@ -10,6 +10,16 @@ export const API_CONFIG = {
     signUp: `${API_BASE_URL}/api/auth/signup`,
     signOut: `${API_BASE_URL}/api/auth/logout`,
     session: `${API_BASE_URL}/api/auth/session`,
+    uploadProfilePicture: `${API_BASE_URL}/api/auth/upload-picture`,
+    customerProfiles: {
+      me: `${API_BASE_URL}/api/customer-profiles/me`,
+      checkVerify: `${API_BASE_URL}/api/customer-profiles/me/check-verify`,
+      uploadDocument: `${API_BASE_URL}/api/customer-profiles/me/upload-document`,
+    },
+    customerLocations: {
+      base: `${API_BASE_URL}/api/customer-locations`,
+      byId: (id: string) => `${API_BASE_URL}/api/customer-locations/${id}`,
+    },
     cars: {
       base: `${API_BASE_URL}/api/cars`,
       search: `${API_BASE_URL}/api/cars/search`,

@@ -15,7 +15,10 @@ export default function ProfileNavTabs() {
   ];
 
   return (
-    <nav aria-label="Navigasi profil" className="border-b border-gray-100 mb-12">
+    <nav
+      aria-label="Navigasi profil"
+      className="border-b border-gray-100 mb-12"
+    >
       <div className="flex gap-10 overflow-x-auto pb-px scrollbar-hide">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href;

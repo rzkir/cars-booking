@@ -49,25 +49,22 @@ export default async function Page() {
               Informasi Dasar
             </h3>
             <form className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-3">
+              <div className="flex flex-col space-y-3">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
                   Nama Lengkap
                 </label>
-                <input
-                  type="text"
-                  defaultValue={user.name || ""}
-                  className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all"
-                />
+                <span className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all">
+                  {user.name}
+                </span>
               </div>
-              <div className="space-y-3">
+              <div className="flex flex-col space-y-3">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
                   Email
                 </label>
-                <input
-                  type="email"
-                  defaultValue={user.email || ""}
-                  className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all"
-                />
+
+                <span className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all">
+                  {user.email}
+                </span>
               </div>
               <div className="space-y-3">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
@@ -77,11 +74,9 @@ export default async function Page() {
                   <div className="px-4 py-4 bg-gray-100 rounded-2xl font-bold text-gray-400">
                     +62
                   </div>
-                  <input
-                    type="tel"
-                    defaultValue="81298765432"
-                    className="flex-1 px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all"
-                  />
+                  <span className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all">
+                    {user.phone.replace(/^0/, "")}
+                  </span>
                 </div>
               </div>
               <div className="space-y-3">
