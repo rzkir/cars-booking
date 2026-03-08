@@ -11,6 +11,8 @@ type CarCardProps = {
   slug: string;
 };
 
+import Link from "next/link";
+
 import Image from "next/image";
 
 export function CarCard({
@@ -61,13 +63,13 @@ export function CarCard({
             <span>{fuel}</span>
           </div>
         </div>
-        <a
+        <Link
           href={`/daftar-mobil/${slug}`}
           id={`car-detail-${slug}`}
           className="block w-full text-center bg-[#1a1a1a] text-white py-4 rounded-xl font-black text-sm hover:bg-black transition-colors"
         >
           Lihat Detail
-        </a>
+        </Link>
       </div>
     </div>
   );

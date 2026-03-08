@@ -92,3 +92,15 @@ type CarsSearchResponse = {
   data: CarSearchItem[];
   pagination: CarsListResponse["pagination"];
 };
+
+
+//==================================== Cars Details ====================================//
+interface CarDetails extends Car {
+  description: string | null;
+  car_images: CarImage[];
+  car_pricings: CarPricing[];
+}
+
+type CarDetailsResponse = {
+  data: CarDetails;
+};
