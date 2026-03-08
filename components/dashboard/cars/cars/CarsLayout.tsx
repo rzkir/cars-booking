@@ -71,10 +71,8 @@ import { useCarsListState } from "@/services/cars.service";
 import { formatIdr } from "@/hooks/format-idr";
 
 import {
-  FUEL_OPTIONS,
   STATUS_OPTIONS,
   RENTAL_TYPE_OPTIONS,
-  TRANSMISSION_OPTIONS,
   getPaginationRange,
   useFuelTypesQuery,
   useTransmissionsQuery,
@@ -83,20 +81,14 @@ import {
 export default function CarsPage() {
   const { data: fuelTypes = [] } = useFuelTypesQuery();
   const { data: transmissions = [] } = useTransmissionsQuery();
-  const fuelOptions =
-    fuelTypes.length > 0
-      ? fuelTypes.map((f) => ({
-          value: f.name,
-          label: f.name.charAt(0).toUpperCase() + f.name.slice(1),
-        }))
-      : FUEL_OPTIONS;
-  const transmissionOptions =
-    transmissions.length > 0
-      ? transmissions.map((t) => ({
-          value: t.name.toLowerCase(),
-          label: t.name.charAt(0).toUpperCase() + t.name.slice(1),
-        }))
-      : TRANSMISSION_OPTIONS;
+  const fuelOptions = fuelTypes.map((f) => ({
+    value: f.name,
+    label: f.name.charAt(0).toUpperCase() + f.name.slice(1),
+  }));
+  const transmissionOptions = transmissions.map((t) => ({
+    value: t.name.toLowerCase(),
+    label: t.name.charAt(0).toUpperCase() + t.name.slice(1),
+  }));
 
   const {
     setPage,

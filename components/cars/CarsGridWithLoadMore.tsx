@@ -10,17 +10,26 @@ type CarsGridWithLoadMoreProps = {
   initialData?: CarsListResponse;
   search?: string;
   rentalType?: "self_drive" | "with_driver";
+  transmission?: string;
+  fuelType?: string;
+  maxPrice?: number;
 };
 
 export default function CarsGridWithLoadMore({
   initialData,
   search,
   rentalType,
+  transmission,
+  fuelType,
+  maxPrice,
 }: CarsGridWithLoadMoreProps) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteCarsQuery({
       search: search?.trim() || undefined,
       rental_type: rentalType,
+      transmission,
+      fuel_type: fuelType,
+      max_price: maxPrice,
       initialData,
     });
 

@@ -63,8 +63,6 @@ import {
   useTransmissionsQuery,
   useFuelTypesQuery,
   useFacilitiesQuery,
-  TRANSMISSION_OPTIONS,
-  FUEL_OPTIONS,
 } from "@/services/cars.service";
 
 export const emptyForm = {
@@ -126,21 +124,15 @@ export function CarFormInner({
   const { data: fuelTypes = [] } = useFuelTypesQuery();
   const { data: facilities = [] } = useFacilitiesQuery();
 
-  const transmissionOptions =
-    transmissions.length > 0
-      ? transmissions.map((t) => ({
-          value: t.name.toLowerCase(),
-          label: t.name.charAt(0).toUpperCase() + t.name.slice(1),
-        }))
-      : TRANSMISSION_OPTIONS;
+  const transmissionOptions = transmissions.map((t) => ({
+    value: t.name.toLowerCase(),
+    label: t.name.charAt(0).toUpperCase() + t.name.slice(1),
+  }));
 
-  const fuelOptions =
-    fuelTypes.length > 0
-      ? fuelTypes.map((f) => ({
-          value: f.name,
-          label: f.name.charAt(0).toUpperCase() + f.name.slice(1),
-        }))
-      : FUEL_OPTIONS;
+  const fuelOptions = fuelTypes.map((f) => ({
+    value: f.name,
+    label: f.name.charAt(0).toUpperCase() + f.name.slice(1),
+  }));
 
   const toggleFacility = (name: string) => {
     setSelectedFacilities((prev) =>

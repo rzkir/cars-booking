@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 
 import {
   useQuery,
@@ -24,22 +25,6 @@ export function getPaginationRange(
     return [1, "ellipsis", total - 3, total - 2, total - 1, total];
   return [1, "ellipsis", current - 1, current, current + 1, "ellipsis", total];
 }
-
-export const FUEL_OPTIONS = [
-  { value: "bensin", label: "Bensin" },
-  { value: "diesel", label: "Diesel" },
-  { value: "electric", label: "Electric" },
-  { value: "hybrid", label: "Hybrid" },
-  { value: "pertamax", label: "Pertamax" },
-  { value: "pertalite", label: "Pertalite" },
-  { value: "premium", label: "Premium" },
-  { value: "listrik", label: "Listrik" },
-];
-
-export const TRANSMISSION_OPTIONS = [
-  { value: "manual", label: "Manual" },
-  { value: "matic", label: "Matic" },
-];
 
 export const STATUS_OPTIONS = [
   { value: "available", label: "Tersedia" },
@@ -279,6 +264,286 @@ export function useDeleteCarMutation(
     },
     ...opts,
   });
+}
+
+// ========== CARS PUBLIC FILTERS STATE (untuk halaman daftar mobil) ==========
+
+export const CARS_PUBLIC_RENTAL_TYPE_OPTIONS = [
+  { value: "all", label: "Semua" },
+  { value: "self_drive", label: "Lepas Kunci" },
+  { value: "with_driver", label: "Dengan Supir" },
+] as const;
+
+export const CARS_PUBLIC_PRICE_MIN = 300000;
+export const CARS_PUBLIC_PRICE_MAX = 1200000;
+export const CARS_PUBLIC_PRICE_STEP = 50000;
+
+export type CarsPublicFiltersInitial = {
+  search?: string;
+  rentalType?: "self_drive" | "with_driver";
+  transmission?: string;
+  fuelType?: string;
+  maxPrice?: number;
+  transmissions?: Transmission[];
+  fuelTypes?: FuelType[];
+};
+
+export function useCarsPublicFiltersState(initial: CarsPublicFiltersInitial) {
+  const {
+    search: initialSearch = "",
+    rentalType: initialRentalType,
+    transmission: initialTransmission,
+    fuelType: initialFuelType,
+    maxPrice: initialMaxPrice,
+  } = initial;
+
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [searchInput, setSearchInput] = useState(initialSearch);
+  const [appliedSearch, setAppliedSearch] = useState(initialSearch);
+  const [rentalTypeSelect, setRentalTypeSelect] = useState<
+    (typeof CARS_PUBLIC_RENTAL_TYPE_OPTIONS)[number]["value"]
+  >(initialRentalType ?? "all");
+  const [appliedRentalType, setAppliedRentalType] = useState<
+    "all" | "self_drive" | "with_driver"
+  >(initialRentalType ?? "all");
+  const [selectedTransmissions, setSelectedTransmissions] = useState<Set<string>>(
+    () =>
+      new Set(
+        initialTransmission
+          ? initialTransmission.split(",").map((s) => s.trim()).filter(Boolean)
+          : [],
+      ),
+  );
+  const [appliedTransmissions, setAppliedTransmissions] = useState<Set<string>>(
+    () =>
+      new Set(
+        initialTransmission
+          ? initialTransmission.split(",").map((s) => s.trim()).filter(Boolean)
+          : [],
+      ),
+  );
+  const [selectedFuelTypes, setSelectedFuelTypes] = useState<Set<string>>(
+    () =>
+      new Set(
+        initialFuelType
+          ? initialFuelType.split(",").map((s) => s.trim()).filter(Boolean)
+          : [],
+      ),
+  );
+  const [appliedFuelTypes, setAppliedFuelTypes] = useState<Set<string>>(
+    () =>
+      new Set(
+        initialFuelType
+          ? initialFuelType.split(",").map((s) => s.trim()).filter(Boolean)
+          : [],
+      ),
+  );
+  const [priceMax, setPriceMax] = useState(
+    initialMaxPrice ?? CARS_PUBLIC_PRICE_MAX,
+  );
+  const [appliedMaxPrice, setAppliedMaxPrice] = useState(
+    initialMaxPrice ?? CARS_PUBLIC_PRICE_MAX,
+  );
+
+  const updateUrl = (params: {
+    search?: string;
+    rentalType?: "all" | "self_drive" | "with_driver";
+    transmission?: string;
+    fuelType?: string;
+    maxPrice?: number;
+  }) => {
+    const q = new URLSearchParams();
+    if (params.search) q.set("q", params.search);
+    if (params.rentalType && params.rentalType !== "all")
+      q.set("rental_type", params.rentalType);
+    if (params.transmission) q.set("transmission", params.transmission);
+    if (params.fuelType) q.set("fuel_type", params.fuelType);
+    if (
+      params.maxPrice != null &&
+      params.maxPrice > 0 &&
+      params.maxPrice < CARS_PUBLIC_PRICE_MAX
+    )
+      q.set("max_price", String(params.maxPrice));
+    const query = q.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+  };
+
+  const handlePerbarui = () => {
+    const normalizedSearch = searchInput.trim().replace(/\s+/g, " ");
+    setSearchInput(normalizedSearch);
+    setAppliedSearch(normalizedSearch);
+    setAppliedRentalType(rentalTypeSelect);
+    setAppliedTransmissions(new Set(selectedTransmissions));
+    setAppliedFuelTypes(new Set(selectedFuelTypes));
+    setAppliedMaxPrice(priceMax);
+    updateUrl({
+      search: normalizedSearch,
+      rentalType: rentalTypeSelect,
+      transmission:
+        selectedTransmissions.size > 0
+          ? Array.from(selectedTransmissions).join(",")
+          : undefined,
+      fuelType:
+        selectedFuelTypes.size > 0
+          ? Array.from(selectedFuelTypes).join(",")
+          : undefined,
+      maxPrice: priceMax < CARS_PUBLIC_PRICE_MAX ? priceMax : undefined,
+    });
+  };
+
+  const handleReset = () => {
+    setSearchInput("");
+    setAppliedSearch("");
+    setRentalTypeSelect("all");
+    setAppliedRentalType("all");
+    setSelectedTransmissions(new Set());
+    setAppliedTransmissions(new Set());
+    setSelectedFuelTypes(new Set());
+    setAppliedFuelTypes(new Set());
+    setPriceMax(CARS_PUBLIC_PRICE_MAX);
+    setAppliedMaxPrice(CARS_PUBLIC_PRICE_MAX);
+    updateUrl({});
+  };
+
+  const toggleTransmission = (name: string) => {
+    setSelectedTransmissions((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+
+  const toggleFuelType = (name: string) => {
+    setSelectedFuelTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+
+  const removeSearchFilter = () => {
+    setSearchInput("");
+    setAppliedSearch("");
+    updateUrl({
+      search: "",
+      rentalType: appliedRentalType,
+      transmission:
+        appliedTransmissions.size > 0
+          ? Array.from(appliedTransmissions).join(",")
+          : undefined,
+      fuelType:
+        appliedFuelTypes.size > 0
+          ? Array.from(appliedFuelTypes).join(",")
+          : undefined,
+      maxPrice:
+        appliedMaxPrice < CARS_PUBLIC_PRICE_MAX ? appliedMaxPrice : undefined,
+    });
+  };
+
+  const removeRentalTypeFilter = () => {
+    setAppliedRentalType("all");
+    setRentalTypeSelect("all");
+    updateUrl({
+      search: appliedSearch || undefined,
+      rentalType: "all",
+      transmission:
+        appliedTransmissions.size > 0
+          ? Array.from(appliedTransmissions).join(",")
+          : undefined,
+      fuelType:
+        appliedFuelTypes.size > 0
+          ? Array.from(appliedFuelTypes).join(",")
+          : undefined,
+      maxPrice:
+        appliedMaxPrice < CARS_PUBLIC_PRICE_MAX ? appliedMaxPrice : undefined,
+    });
+  };
+
+  const removeTransmissionFilter = (name: string) => {
+    const next = new Set(appliedTransmissions);
+    next.delete(name);
+    setSelectedTransmissions(next);
+    setAppliedTransmissions(next);
+    updateUrl({
+      search: appliedSearch || undefined,
+      rentalType: appliedRentalType,
+      transmission: next.size > 0 ? Array.from(next).join(",") : undefined,
+      fuelType:
+        appliedFuelTypes.size > 0
+          ? Array.from(appliedFuelTypes).join(",")
+          : undefined,
+      maxPrice:
+        appliedMaxPrice < CARS_PUBLIC_PRICE_MAX ? appliedMaxPrice : undefined,
+    });
+  };
+
+  const removeFuelTypeFilter = (name: string) => {
+    const next = new Set(appliedFuelTypes);
+    next.delete(name);
+    setSelectedFuelTypes(next);
+    setAppliedFuelTypes(next);
+    updateUrl({
+      search: appliedSearch || undefined,
+      rentalType: appliedRentalType,
+      transmission:
+        appliedTransmissions.size > 0
+          ? Array.from(appliedTransmissions).join(",")
+          : undefined,
+      fuelType: next.size > 0 ? Array.from(next).join(",") : undefined,
+      maxPrice:
+        appliedMaxPrice < CARS_PUBLIC_PRICE_MAX ? appliedMaxPrice : undefined,
+    });
+  };
+
+  const removePriceFilter = () => {
+    setPriceMax(CARS_PUBLIC_PRICE_MAX);
+    setAppliedMaxPrice(CARS_PUBLIC_PRICE_MAX);
+    updateUrl({
+      search: appliedSearch || undefined,
+      rentalType: appliedRentalType,
+      transmission:
+        appliedTransmissions.size > 0
+          ? Array.from(appliedTransmissions).join(",")
+          : undefined,
+      fuelType:
+        appliedFuelTypes.size > 0
+          ? Array.from(appliedFuelTypes).join(",")
+          : undefined,
+      maxPrice: undefined,
+    });
+  };
+
+  return {
+    searchInput,
+    setSearchInput,
+    appliedSearch,
+    rentalTypeSelect,
+    setRentalTypeSelect,
+    appliedRentalType,
+    selectedTransmissions,
+    appliedTransmissions,
+    selectedFuelTypes,
+    appliedFuelTypes,
+    priceMax,
+    setPriceMax,
+    appliedMaxPrice,
+    updateUrl,
+    handlePerbarui,
+    handleReset,
+    toggleTransmission,
+    toggleFuelType,
+    removeSearchFilter,
+    removeRentalTypeFilter,
+    removeTransmissionFilter,
+    removeFuelTypeFilter,
+    removePriceFilter,
+  };
 }
 
 // ========== CARS LIST STATE (untuk halaman list mobil) ==========
@@ -771,3 +1036,5 @@ export function useDeleteFacilityMutation() {
     onError: (err) => toast.error(err.message || "Gagal menghapus fasilitas"),
   });
 }
+
+//==================== Pages: Cars List ====================//
