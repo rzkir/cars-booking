@@ -309,35 +309,35 @@ export default function Page() {
           </p>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
             <Image
-              src="https://upload.wikimedia.org/wikipedia/commons/4/44/Toyota_logo.svg"
-              className="h-6 w-auto"
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMha4iBfMF-P54i0rxc5aSqqWuktU3_Ed0vA&s"
+              className="h-10 w-auto"
               alt="Toyota"
               width={120}
               height={24}
             />
             <Image
-              src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Honda_Logo.svg"
-              className="h-8 w-auto"
+              src="https://i0.wp.com/www.dafontfree.io/wp-content/uploads/2021/09/Honda-Font.jpg?resize=1200%2C679&ssl=1"
+              className="h-10 w-auto"
               alt="Honda"
               width={140}
               height={32}
             />
             <Image
-              src="https://upload.wikimedia.org/wikipedia/commons/1/12/Suzuki_logo_2.svg"
-              className="h-6 w-auto"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Suzuki_Motor_Corporation_logo.svg/1280px-Suzuki_Motor_Corporation_logo.svg.png"
+              className="h-10 w-auto"
               alt="Suzuki"
               width={140}
               height={24}
             />
             <Image
-              src="https://upload.wikimedia.org/wikipedia/commons/7/7b/Mitsubishi_logo.svg"
-              className="h-8 w-auto"
+              src="https://fabrikbrands.com/wp-content/uploads/Mitsubishi-Logo-History-1.png"
+              className="h-10 w-auto"
               alt="Mitsubishi"
               width={160}
               height={32}
             />
             <Image
-              src="https://upload.wikimedia.org/wikipedia/commons/0/07/Daihatsu_logo.svg"
+              src="https://www.citypng.com/public/uploads/preview/daihatsu-logo-png-img-735811696610542r3viuyslyh.png"
               className="h-10 w-auto"
               alt="Daihatsu"
               width={160}

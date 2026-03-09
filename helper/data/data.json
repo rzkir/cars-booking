@@ -140,5 +140,423 @@
       "message": "Pesanan ini telah dibatalkan. Hubungi admin jika Anda merasa ini sebuah kesalahan.",
       "badgeLabel": "Dibatalkan"
     }
-  ]
+  ],
+  "terms_conditions": {
+    "hero": {
+      "badgeLabel": "Legal Documentation",
+      "titlePrefix": "Syarat &",
+      "titleHighlight": "Ketentuan",
+      "titleSuffix": "DriveEase",
+      "description": "Kebijakan penggunaan layanan penyewaan kendaraan terpadu. Harap baca dokumen ini dengan seksama sebelum menggunakan platform kami.",
+      "lastUpdatedLabel": "Terakhir diperbarui:",
+      "lastUpdatedValue": "15 Januari 2024"
+    },
+    "toc": [
+      { "id": "definisi", "label": "Definisi & Interpretasi", "no": "01." },
+      { "id": "penggunaan", "label": "Penggunaan Layanan", "no": "02." },
+      { "id": "akun", "label": "Akun Pengguna", "no": "03." },
+      { "id": "booking", "label": "Booking & Pemesanan", "no": "04." },
+      { "id": "pembayaran", "label": "Kebijakan Pembayaran", "no": "05." },
+      { "id": "refund", "label": "Pembatalan & Refund", "no": "06." },
+      { "id": "liabilitas", "label": "Tanggung Jawab & Liabilitas", "no": "07." },
+      { "id": "asuransi", "label": "Asuransi & Perlindungan", "no": "08." },
+      { "id": "denda", "label": "Denda & Penalti", "no": "09." },
+      { "id": "copyright", "label": "Hak Cipta & IP", "no": "10." },
+      { "id": "perubahan", "label": "Perubahan Syarat", "no": "11." },
+      { "id": "sengketa", "label": "Penyelesaian Sengketa", "no": "12." }
+    ],
+    "sections": {
+      "definisi": {
+        "number": "01",
+        "title": "Definisi & Interpretasi",
+        "intro": "Dokumen ini merupakan perjanjian sah antara Pengguna dan DriveEase Indonesia. Kecuali disebutkan sebaliknya, istilah-istilah berikut memiliki arti sebagai berikut:",
+        "items": [
+          {
+            "term": "Layanan",
+            "description": "Mengacu pada seluruh platform digital, aplikasi mobile, website, dan jasa penyewaan kendaraan yang disediakan oleh DriveEase."
+          },
+          {
+            "term": "Pengguna",
+            "description": "Setiap individu atau badan hukum yang mengakses Layanan dan/atau melakukan pemesanan kendaraan."
+          },
+          {
+            "term": "Kendaraan",
+            "description": "Semua jenis armada roda empat atau lebih yang disewakan melalui platform DriveEase."
+          }
+        ]
+      },
+      "penggunaan": {
+        "number": "02",
+        "title": "Penggunaan Layanan",
+        "intro": "Untuk menggunakan layanan penyewaan kendaraan kami, Pengguna wajib memenuhi syarat berikut:",
+        "requirements": [
+          "Berusia minimal 21 (dua puluh satu) tahun untuk kategori kendaraan standar dan 25 (dua puluh lima) tahun untuk kategori premium.",
+          "Memiliki Surat Izin Mengemudi (SIM A atau lebih tinggi) yang masih berlaku di wilayah hukum Republik Indonesia.",
+          "Menyediakan dokumen identitas asli (KTP/Passport) yang valid untuk proses verifikasi.",
+          "Menyetujui untuk tidak menggunakan kendaraan untuk aktivitas ilegal, balapan, atau pengangkutan barang terlarang."
+        ]
+      },
+      "akun": {
+        "number": "03",
+        "title": "Akun Pengguna",
+        "text": "Pengguna bertanggung jawab penuh atas keamanan kredensial akun mereka. DriveEase berhak menangguhkan akun jika ditemukan indikasi penyalahgunaan, aktivitas mencurigakan, atau data profil yang tidak akurat."
+      },
+      "booking": {
+        "number": "04",
+        "title": "Booking & Pemesanan",
+        "text": "Pemesanan dianggap sah setelah mendapatkan konfirmasi melalui aplikasi atau email. DriveEase tidak menjamin ketersediaan unit sampai pembayaran uang muka (DP) atau pelunasan diterima oleh sistem kami."
+      },
+      "pembayaran": {
+        "number": "05",
+        "title": "Kebijakan Pembayaran",
+        "text": "Semua transaksi menggunakan mata uang Rupiah (IDR). Harga yang tertera sudah termasuk pajak yang berlaku kecuali disebutkan lain. Keterlambatan pembayaran pelunasan dapat mengakibatkan pembatalan otomatis secara sepihak oleh sistem."
+      },
+      "refund": {
+        "number": "06",
+        "title": "Pembatalan & Refund",
+        "rules": [
+          {
+            "type": "full",
+            "text": "Refund 100% jika pembatalan dilakukan minimal 48 jam sebelum waktu pickup."
+          },
+          {
+            "type": "partial",
+            "text": "Refund 50% jika pembatalan dilakukan antara 24-48 jam sebelum waktu pickup."
+          },
+          {
+            "type": "none",
+            "text": "Tidak ada refund untuk pembatalan kurang dari 24 jam sebelum waktu pickup."
+          }
+        ]
+      },
+      "liabilitas": {
+        "number": "07",
+        "title": "Tanggung Jawab & Liabilitas",
+        "text": "Pengguna bertanggung jawab penuh atas segala kerusakan, kehilangan, atau biaya hukum yang timbul selama masa sewa. DriveEase tidak bertanggung jawab atas kehilangan barang pribadi di dalam kendaraan."
+      },
+      "asuransi": {
+        "number": "08",
+        "title": "Asuransi & Perlindungan",
+        "text": "Semua unit kendaraan DriveEase dilindungi oleh asuransi standar. Pengguna dapat memilih opsi perlindungan tambahan (Comprehensive) dengan biaya tambahan untuk mengurangi nilai resiko sendiri (own risk/deductible)."
+      },
+      "denda": {
+        "number": "09",
+        "title": "Denda & Penalti",
+        "penalties": [
+          {
+            "labelPrefix": "Overtime:",
+            "description": "Denda 10% per jam dari harga sewa harian."
+          },
+          {
+            "labelPrefix": "BBM:",
+            "description": "Selisih bahan bakar akan dikenakan biaya sesuai harga pasar + biaya layanan 15%."
+          },
+          {
+            "labelPrefix": "Kebersihan:",
+            "description": "Denda mulai Rp 150.000 jika kendaraan dikembalikan dalam kondisi sangat kotor atau berbau asap rokok."
+          }
+        ]
+      },
+      "copyright": {
+        "number": "10",
+        "title": "Hak Cipta & Intellectual Property",
+        "text": "Semua konten, logo, grafis, dan kode program di platform DriveEase adalah milik sah DriveEase Indonesia dan dilindungi oleh Undang-Undang Hak Cipta yang berlaku."
+      },
+      "perubahan": {
+        "number": "11",
+        "title": "Perubahan Syarat",
+        "text": "DriveEase berhak memperbarui Syarat & Ketentuan ini sewaktu-waktu. Pengguna disarankan untuk memeriksa halaman ini secara berkala. Penggunaan layanan setelah perubahan dianggap sebagai persetujuan terhadap syarat yang baru."
+      },
+      "sengketa": {
+        "number": "12",
+        "title": "Penyelesaian Sengketa",
+        "text": "Segala perselisihan yang timbul dari penggunaan layanan akan diselesaikan secara musyawarah mufakat. Jika tidak tercapai kesepakatan, maka akan diselesaikan melalui jalur hukum di Pengadilan Negeri Jakarta Selatan."
+      }
+    },
+    "legalCta": {
+      "title": "Ada Pertanyaan Mengenai Legalitas?",
+      "description": "Tim kepatuhan kami siap membantu Anda memahami lebih lanjut mengenai hak dan kewajiban Anda sebagai pengguna.",
+      "email": "legal@driveease.id",
+      "helpCenterUrl": "/pusat-bantuan"
+    }
+  },
+  "privacy_policy": {
+    "hero": {
+      "badgeLabel": "Dokumen Legal Resmi",
+      "titlePrefix": "Kebijakan",
+      "titleHighlight": "Privasi",
+      "description": "DriveEase menghormati privasi Anda dan berkomitmen untuk melindungi data pribadi yang Anda percayakan kepada kami.",
+      "lastUpdatedLabel": "Terakhir Diperbarui",
+      "lastUpdatedValue": "24 Mei 2024"
+    },
+    "toc": [
+      { "id": "section-1", "label": "Pengantar" },
+      { "id": "section-2", "label": "Informasi Pengumpulan" },
+      { "id": "section-3", "label": "Penggunaan Data" },
+      { "id": "section-4", "label": "Basis Hukum" },
+      { "id": "section-5", "label": "Pihak Ketiga" },
+      { "id": "section-6", "label": "Keamanan Data" },
+      { "id": "section-7", "label": "Hak Pengguna" },
+      { "id": "section-8", "label": "Cookies & Pelacakan" },
+      { "id": "section-9", "label": "Retensi Data" },
+      { "id": "section-10", "label": "Privasi Anak" },
+      { "id": "section-11", "label": "Perubahan Kebijakan" },
+      { "id": "section-12", "label": "Hubungi Kami" }
+    ],
+    "sections": {
+      "section1": {
+        "number": "01",
+        "title": "Pengantar & Jangkauan",
+        "paragraphs": [
+          "Kebijakan Privasi ini menjelaskan bagaimana DriveEase (\"kami\", \"kita\", atau \"milik kami\") mengumpulkan, menggunakan, mengungkapkan, dan melindungi informasi pribadi Anda saat Anda menggunakan situs web kami, aplikasi seluler, dan layanan rental mobil kami.",
+          "DriveEase dioperasikan oleh PT Drive Ease Indonesia, yang bertanggung jawab atas data Anda. Kebijakan ini berlaku untuk semua pengguna di wilayah hukum Republik Indonesia dan secara global di mana layanan kami dapat diakses."
+        ]
+      },
+      "section2": {
+        "number": "02",
+        "title": "Informasi yang Kami Kumpulkan",
+        "intro": "Kami mengumpulkan berbagai jenis informasi pribadi untuk memberikan pengalaman rental terbaik bagi Anda:",
+        "cards": [
+          {
+            "title": "Data Identitas",
+            "items": [
+              "Nama Lengkap Sesuai KTP/Paspor",
+              "Nomor NIK / Paspor",
+              "Nomor Surat Izin Mengemudi (SIM)",
+              "Foto KTP & Selfie Verifikasi"
+            ]
+          },
+          {
+            "title": "Informasi Kontak",
+            "items": [
+              "Alamat Email Aktif",
+              "Nomor Telepon / WhatsApp",
+              "Alamat Domisili Pengiriman",
+              "Kontak Darurat"
+            ]
+          },
+          {
+            "title": "Data Keuangan",
+            "items": [
+              "Nomor Rekening / E-Wallet",
+              "Informasi Kartu Kredit (Tersandikan)",
+              "Riwayat Transaksi Pembayaran"
+            ]
+          },
+          {
+            "title": "Data Teknis & Penggunaan",
+            "items": [
+              "Alamat IP & Device ID",
+              "Lokasi GPS Kendaraan (Selama Sewa)",
+              "Log Aktivitas Aplikasi"
+            ]
+          }
+        ],
+        "table": [
+          {
+            "category": "Biometrik/Foto",
+            "source": "Upload Langsung",
+            "purpose": "Verifikasi KYC & Keamanan"
+          },
+          {
+            "category": "Lokasi GPS",
+            "source": "Tracker Kendaraan",
+            "purpose": "Manajemen Armada & Keamanan"
+          },
+          {
+            "category": "Perilaku Mengemudi",
+            "source": "Telemetri Sensor",
+            "purpose": "Evaluasi Resiko Asuransi"
+          }
+        ]
+      },
+      "section3": {
+        "number": "03",
+        "title": "Bagaimana Kami Menggunakan Data",
+        "intro": "Data Anda digunakan secara eksklusif untuk tujuan operasional dan pengembangan layanan:",
+        "uses": [
+          {
+            "key": "services",
+            "title": "Layanan Rental",
+            "description": "Memproses pemesanan, verifikasi kelayakan pengemudi, dan penyediaan unit kendaraan."
+          },
+          {
+            "key": "communication",
+            "title": "Komunikasi Pelanggan",
+            "description": "Mengirim konfirmasi booking, update status perjalanan, dan bantuan teknis."
+          },
+          {
+            "key": "analytics",
+            "title": "Analisis & Pengembangan",
+            "description": "Memahami preferensi pengguna untuk meningkatkan efisiensi rute dan kualitas armada."
+          },
+          {
+            "key": "marketing",
+            "title": "Pemasaran (Opsional)",
+            "description": "Memberikan penawaran khusus dan loyalitas poin (Anda dapat berhenti berlangganan kapan saja)."
+          }
+        ]
+      },
+      "section4": {
+        "number": "04",
+        "title": "Basis Hukum Pemrosesan Data",
+        "intro": "Kami memproses informasi pribadi berdasarkan dasar hukum berikut:",
+        "legalBases": [
+          {
+            "key": "consent",
+            "title": "Persetujuan (Consent)",
+            "description": "Ketika Anda menyetujui kami menggunakan data Anda untuk pemasaran atau tracking GPS."
+          },
+          {
+            "key": "contract",
+            "title": "Kontrak (Contract Performance)",
+            "description": "Pemrosesan yang diperlukan untuk memenuhi kontrak sewa yang Anda buat."
+          },
+          {
+            "key": "legalObligation",
+            "title": "Kewajiban Hukum",
+            "description": "Kepatuhan terhadap regulasi lalu lintas dan audit keuangan negara."
+          },
+          {
+            "key": "legitimateInterest",
+            "title": "Kepentingan Sah",
+            "description": "Keamanan armada kami dan pencegahan penipuan identitas."
+          }
+        ]
+      },
+      "section5": {
+        "number": "05",
+        "title": "Berbagi Data dengan Pihak Ketiga",
+        "intro": "DriveEase tidak menjual data Anda. Kami hanya berbagi informasi dengan mitra resmi yang diperlukan:",
+        "partners": [
+          {
+            "key": "paymentGateway",
+            "title": "Payment Gateway",
+            "subtitle": "Xendit / Midtrans"
+          },
+          {
+            "key": "insurance",
+            "title": "Asuransi",
+            "subtitle": "Allianz / Sinarmas"
+          },
+          {
+            "key": "authority",
+            "title": "Otoritas Hukum",
+            "subtitle": "Kepolisian (Kecelakaan)"
+          }
+        ],
+        "note": "Mitra kami diwajibkan oleh kontrak untuk menjaga kerahasiaan data Anda dan hanya menggunakannya untuk tujuan spesifik yang telah kami tetapkan."
+      },
+      "section6": {
+        "number": "06",
+        "title": "Keamanan Data",
+        "security": {
+          "technologyTitle": "Teknologi Keamanan",
+          "technologyItems": [
+            "Enkripsi SSL/TLS 256-bit untuk semua transmisi data.",
+            "Penyimpanan data terenkripsi (Encryption at Rest).",
+            "Firewall aplikasi web dan proteksi DDoS."
+          ],
+          "accessControlTitle": "Kontrol Akses",
+          "accessControlItems": [
+            "Autentikasi Dua Faktor (2FA) untuk staf DriveEase.",
+            "Prinsip Hak Akses Terbatas (Least Privilege).",
+            "Audit keamanan rutin oleh pihak ketiga."
+          ]
+        }
+      },
+      "section7": {
+        "number": "07",
+        "title": "Hak Pengguna",
+        "intro": "Berdasarkan regulasi Perlindungan Data Pribadi (PDP) Indonesia, Anda memiliki hak-hak berikut:",
+        "rights": [
+          "Hak Akses & Portabilitas",
+          "Hak Koreksi Data",
+          "Hak Penghapusan (Right to be Forgotten)"
+        ],
+        "contactNote": "Untuk menjalankan hak Anda, silakan hubungi privacy@driveease.id dengan melampirkan bukti identitas yang sah.",
+        "contactEmail": "privacy@driveease.id"
+      },
+      "section8": {
+        "number": "08",
+        "title": "Cookies & Pelacakan",
+        "intro": "Kami menggunakan cookies untuk meningkatkan pengalaman browsing Anda:",
+        "cookies": [
+          {
+            "number": "01",
+            "label": "Essential Cookies",
+            "description": "Diperlukan untuk login dan keamanan transaksi."
+          },
+          {
+            "number": "02",
+            "label": "Analytics Cookies",
+            "description": "Google Analytics untuk memahami performa situs."
+          },
+          {
+            "number": "03",
+            "label": "Marketing Cookies",
+            "description": "Digunakan untuk memberikan iklan yang relevan."
+          }
+        ],
+        "footerNote": "Anda dapat mengatur preferensi cookies melalui pengaturan browser Anda."
+      },
+      "section9": {
+        "number": "09",
+        "title": "Retensi Data",
+        "intro": "Kami menyimpan data pribadi Anda selama diperlukan:",
+        "table": [
+          {
+            "type": "Profil Akun",
+            "period": "Selama Akun Aktif",
+            "reason": "Akses Layanan"
+          },
+          {
+            "type": "Riwayat Booking",
+            "period": "10 Tahun",
+            "reason": "Peraturan Perpajakan"
+          },
+          {
+            "type": "Data Lokasi (GPS)",
+            "period": "6 Bulan",
+            "reason": "Analisis Operasional"
+          }
+        ]
+      },
+      "section10": {
+        "number": "10",
+        "title": "Privasi Anak",
+        "paragraphs": [
+          "Layanan kami tidak ditujukan untuk anak-anak di bawah usia 18 tahun. Kami tidak secara sengaja mengumpulkan data pribadi dari individu di bawah umur.",
+          "Jika kami mengetahui bahwa kami telah mengumpulkan data dari anak di bawah umur tanpa izin orang tua, kami akan segera mengambil langkah untuk menghapus informasi tersebut dari server kami."
+        ]
+      },
+      "section11": {
+        "number": "11",
+        "title": "Perubahan Kebijakan",
+        "paragraphs": [
+          "Kami dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu untuk mencerminkan perubahan dalam praktik data kami atau kewajiban hukum.",
+          "Kami akan memberi tahu Anda tentang perubahan materi apa pun melalui email atau notifikasi aplikasi sebelum perubahan tersebut menjadi efektif. Penggunaan berkelanjutan Anda atas layanan DriveEase setelah pembaruan menandakan penerimaan Anda terhadap kebijakan baru."
+        ]
+      },
+      "section12": {
+        "number": "12",
+        "title": "Hubungi Kami",
+        "intro": "Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini atau ingin mengajukan keluhan terkait data Anda:",
+        "dpo": {
+          "title": "Data Protection Officer (DPO)",
+          "email": "privacy@driveease.id",
+          "phone": "+62 21 1234 5678"
+        },
+        "office": {
+          "title": "Kantor Pusat",
+          "company": "PT Drive Ease Indonesia",
+          "addressLines": [
+            "Jl. Jenderal Sudirman No. 123",
+            "Jakarta Selatan, 12190"
+          ]
+        },
+        "backToTopLabel": "Kembali ke Atas"
+      }
+    }
+  }
 }

@@ -122,6 +122,11 @@ const data = {
       url: "#",
       icon: Send,
     },
+    {
+      title: "Whatsapp",
+      url: "/dashboard/whatsapp",
+      icon: Send,
+    },
   ],
   projects: [
     {

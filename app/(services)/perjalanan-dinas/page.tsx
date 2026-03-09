@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import Image from "next/image";
 
 import {
@@ -203,8 +204,7 @@ const onboardingSteps: readonly OnboardingStep[] = [
     step: 5,
     title: "Go Live",
     duration: "Instan",
-    description:
-      "Mulai perjalanan bisnis Anda dengan dukungan penuh 24/7.",
+    description: "Mulai perjalanan bisnis Anda dengan dukungan penuh 24/7.",
     icon: Rocket,
     highlighted: true,
   },
@@ -338,7 +338,7 @@ export default function Page() {
       </section>
 
       {/* Nilai Korporat Utama */}
-      <section className="py-32 bg-white">
+      <section className="py-10 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {corporateFeatures.map(({ title, description, icon: Icon }) => (
@@ -360,7 +360,7 @@ export default function Page() {
       </section>
 
       {/* Pilihan Paket Bisnis */}
-      <section id="packages" className="py-32 bg-gray-50">
+      <section id="packages" className="py-10 md:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em]">
@@ -411,9 +411,7 @@ export default function Page() {
                     <div
                       key={feature.label}
                       className={`flex items-center gap-3 font-bold ${
-                        pkg.highlighted
-                          ? "text-white"
-                          : "text-gray-700"
+                        pkg.highlighted ? "text-white" : "text-gray-700"
                       } ${!feature.included ? "opacity-30" : ""}`}
                     >
                       {feature.included ? (
@@ -465,8 +463,8 @@ export default function Page() {
                       pkg.highlighted
                         ? "bg-[#FF9500] text-white hover:bg-[#E68600]"
                         : pkg.id === "enterprise"
-                        ? "bg-[#1a1a1a] text-white hover:bg-black"
-                        : "bg-gray-50 text-[#1a1a1a] hover:bg-gray-100"
+                          ? "bg-[#1a1a1a] text-white hover:bg-black"
+                          : "bg-gray-50 text-[#1a1a1a] hover:bg-gray-100"
                     }`}
                   >
                     {pkg.id === "enterprise"
@@ -481,7 +479,7 @@ export default function Page() {
       </section>
 
       {/* Fitur Tambahan Korporat */}
-      <section className="py-32 bg-white">
+      <section className="py-10 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-y-20 gap-x-12">
             {extraBenefits.map(({ title, description, icon: Icon }) => (
@@ -500,7 +498,7 @@ export default function Page() {
       </section>
 
       {/* Langkah Bergabung */}
-      <section className="py-32 bg-[#1a1a1a]">
+      <section className="py-10 md:py-20 bg-[#1a1a1a]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-24 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em]">
@@ -552,7 +550,7 @@ export default function Page() {
       </section>
 
       {/* Studi Kasus */}
-      <section className="py-32 bg-white">
+      <section className="py-10 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-24 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em]">
@@ -620,7 +618,7 @@ export default function Page() {
       </section>
 
       {/* Fitur Dashboard */}
-      <section className="py-32 bg-gray-50">
+      <section className="py-10 md:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6 text-center mb-24">
           <h3 className="text-4xl font-black tracking-tight mb-20">
             Fitur Unggulan Dashboard
@@ -640,7 +638,7 @@ export default function Page() {
       </section>
 
       {/* FAQ */}
-      <section className="py-32 bg-white">
+      <section className="py-10 md:py-20 bg-white">
         <div className="max-w-3xl mx-auto px-6">
           <h3 className="text-4xl font-black tracking-tight mb-16 text-center">
             Pertanyaan Umum (FAQ)
@@ -668,7 +666,7 @@ export default function Page() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-32 bg-[#FF9500]">
+      <section className="py-10 md:py-20 bg-[#FF9500]">
         <div className="max-w-4xl mx-auto px-6 text-center space-y-10">
           <h3 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-tight">
             Siap Menghemat Biaya Transportasi Perusahaan?
@@ -693,7 +691,7 @@ export default function Page() {
               Hubungi Tim Sales
             </a>
           </div>
-          <p className="text-orange-900/40 text-sm font-bold">
+          <p className="text-white text-sm font-bold">
             Tersedia di 15+ kota besar di Indonesia
           </p>
         </div>
