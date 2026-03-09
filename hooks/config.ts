@@ -42,6 +42,10 @@ export const API_CONFIG = {
       base: `${API_BASE_URL}/api/facilities`,
       byId: (id: string) => `${API_BASE_URL}/api/facilities/${id}`,
     },
+    colors: {
+      base: `${API_BASE_URL}/api/colors`,
+      byId: (id: string) => `${API_BASE_URL}/api/colors/${id}`,
+    },
   },
   /** Opsi Lokasi untuk filter pencarian mobil (Quick Search) */
   LOCATION_OPTIONS: [

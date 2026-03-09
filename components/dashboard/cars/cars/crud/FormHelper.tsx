@@ -16,6 +16,7 @@ import {
   Gauge,
   Image as ImageIcon,
   ListChecks,
+  Palette,
   Plus,
   Settings2,
   Star,
@@ -53,6 +54,8 @@ import {
 
 import { formatIdrInput, parseIdrInput } from "@/hooks/format-idr";
 
+import QuillEditor from "@/helper/editor/QuillEditor";
+
 import {
   useCarImagesQuery,
   useAddCarImageMutation,
@@ -63,12 +66,14 @@ import {
   useTransmissionsQuery,
   useFuelTypesQuery,
   useFacilitiesQuery,
+  useColorsQuery,
 } from "@/services/cars.service";
 
 export const emptyForm = {
   name: "",
   slug: "",
   description: "",
+  content: "",
   price_per_day: "",
   price_with_driver_per_day: "",
   transmission: "",
@@ -77,6 +82,7 @@ export const emptyForm = {
   year: "",
   rental_type: "self_drive" as "self_drive" | "with_driver",
   facilities: "",
+  colors: "",
   status: "available" as "available" | "rented" | "maintenance",
 };
 
@@ -85,6 +91,7 @@ export function carToForm(car: Car) {
     name: car.name,
     slug: car.slug,
     description: car.description ?? "",
+    content: car.content ?? "",
     price_per_day: String(car.price_per_day),
     price_with_driver_per_day:
       car.price_with_driver_per_day != null
@@ -96,6 +103,7 @@ export function carToForm(car: Car) {
     year: car.year != null ? String(car.year) : "",
     rental_type: car.rental_type,
     facilities: car.facilities?.join(", ") ?? "",
+    colors: car.colors?.join(", ") ?? "",
     status: car.status,
   };
 }
@@ -120,9 +128,16 @@ export function CarFormInner({
       .map((f) => f.trim())
       .filter(Boolean),
   );
+  const [selectedColors, setSelectedColors] = useState<string[]>(() =>
+    initialForm.colors
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean),
+  );
   const { data: transmissions = [] } = useTransmissionsQuery();
   const { data: fuelTypes = [] } = useFuelTypesQuery();
   const { data: facilities = [] } = useFacilitiesQuery();
+  const { data: colors = [] } = useColorsQuery();
 
   const transmissionOptions = transmissions.map((t) => ({
     value: t.name.toLowerCase(),
@@ -137,6 +152,12 @@ export function CarFormInner({
   const toggleFacility = (name: string) => {
     setSelectedFacilities((prev) =>
       prev.includes(name) ? prev.filter((f) => f !== name) : [...prev, name],
+    );
+  };
+
+  const toggleColor = (name: string) => {
+    setSelectedColors((prev) =>
+      prev.includes(name) ? prev.filter((c) => c !== name) : [...prev, name],
     );
   };
 
@@ -156,6 +177,7 @@ export function CarFormInner({
       name: form.name.trim(),
       slug: form.slug.trim() || undefined,
       description: form.description.trim() || undefined,
+      content: form.content.trim() || undefined,
       price_per_day: parseIdrInput(form.price_per_day),
       price_with_driver_per_day: form.price_with_driver_per_day.trim()
         ? parseIdrInput(form.price_with_driver_per_day)
@@ -167,6 +189,7 @@ export function CarFormInner({
       rental_type: form.rental_type as "self_drive" | "with_driver",
       facilities:
         selectedFacilities.length > 0 ? selectedFacilities : undefined,
+      colors: selectedColors.length > 0 ? selectedColors : undefined,
       status: form.status,
     };
     await onSubmit(payload);
@@ -427,6 +450,42 @@ export function CarFormInner({
             </FieldDescription>
           )}
         </Field>
+
+        <Field>
+          <FieldLabel htmlFor="colors">
+            <Palette className="h-4 w-4" />
+            Warna
+          </FieldLabel>
+          {colors.length > 0 ? (
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {colors.map((color) => {
+                  const value = color.name;
+                  const checked = selectedColors.includes(value);
+                  return (
+                    <label
+                      key={color.id}
+                      className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-accent"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggleColor(value)}
+                      />
+                      <span className="truncate">{color.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <FieldDescription className="text-xs text-muted-foreground">
+                Centang warna yang tersedia.
+              </FieldDescription>
+            </div>
+          ) : (
+            <FieldDescription className="text-xs text-muted-foreground">
+              Belum ada data warna. Tambahkan warna dulu di menu Colors.
+            </FieldDescription>
+          )}
+        </Field>
       </div>
 
       <Field>
@@ -443,6 +502,21 @@ export function CarFormInner({
           placeholder="Deskripsi mobil..."
           rows={3}
         />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="content">
+          <FileText className="h-4 w-4" />
+          Konten (detail / informasi tambahan)
+        </FieldLabel>
+        <QuillEditor
+          value={form.content}
+          onChange={(content) => setForm((p) => ({ ...p, content }))}
+          placeholder="Konten atau informasi detail mobil (bisa HTML/teks)..."
+        />
+        <FieldDescription className="text-xs text-muted-foreground">
+          Opsional. Untuk informasi tambahan di halaman detail mobil.
+        </FieldDescription>
       </Field>
 
       {imagesSection}

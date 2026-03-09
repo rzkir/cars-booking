@@ -28,6 +28,8 @@ interface CarListItem {
   id: string;
   name: string;
   slug: string;
+  description?: string | null;
+  content?: string | null;
   price_per_day: number;
   price_with_driver_per_day: number | null;
   transmission: CarTransmission;
@@ -36,6 +38,7 @@ interface CarListItem {
   year: number | null;
   rental_type: CarRentalType;
   facilities: string[] | null;
+  colors: string[] | null;
   status: CarStatus;
   created_at: string;
   updated_at: string;
@@ -57,6 +60,9 @@ interface Car {
   account_id: string;
   name: string;
   slug: string;
+  color: string | null;
+  description?: string | null;
+  content?: string | null;
   price_per_day: number;
   price_with_driver_per_day: number | null;
   transmission: CarTransmission;
@@ -93,12 +99,13 @@ type CarsSearchResponse = {
   pagination: CarsListResponse["pagination"];
 };
 
-
 //==================================== Cars Details ====================================//
 interface CarDetails extends Car {
   description: string | null;
+  content: string | null;
   car_images: CarImage[];
   car_pricings: CarPricing[];
+  colors: string[] | null;
 }
 
 type CarDetailsResponse = {

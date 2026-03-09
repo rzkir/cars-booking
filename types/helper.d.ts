@@ -14,6 +14,11 @@ interface Facility {
   name: string;
 }
 
+interface Color {
+  id: string;
+  name: string;
+}
+
 const lookupKeys = {
   transmissions: ["lookup", "transmissions"] as const,
   fuelTypes: ["lookup", "fuelTypes"] as const,
@@ -25,6 +30,7 @@ type CarCreateInput = {
   name: string;
   slug?: string;
   description?: string;
+  content?: string;
   price_per_day: number;
   price_with_driver_per_day?: number;
   transmission: string;
@@ -33,6 +39,7 @@ type CarCreateInput = {
   year?: number;
   rental_type?: "self_drive" | "with_driver";
   facilities?: string[];
+  colors?: string[];
   status?: "available" | "rented" | "maintenance";
 };
 
@@ -68,6 +75,8 @@ interface CarListItem {
   id: string;
   name: string;
   slug: string;
+  description?: string | null;
+  content?: string | null;
   price_per_day: number;
   price_with_driver_per_day: number | null;
   transmission: CarTransmission;
@@ -76,6 +85,7 @@ interface CarListItem {
   year: number | null;
   rental_type: CarRentalType;
   facilities: string[] | null;
+  colors: string[] | null;
   status: CarStatus;
   created_at: string;
   updated_at: string;
@@ -98,6 +108,7 @@ interface Car {
   name: string;
   slug: string;
   description: string | null;
+  content: string | null;
   price_per_day: number;
   price_with_driver_per_day: number | null;
   transmission: CarTransmission;
@@ -106,6 +117,7 @@ interface Car {
   year: number | null;
   rental_type: CarRentalType;
   facilities: string[] | null;
+  colors: string[] | null;
   status: CarStatus;
   created_at: string;
   updated_at: string;

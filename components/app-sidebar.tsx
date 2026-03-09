@@ -46,6 +46,10 @@ const data = {
           url: "/dashboard/cars",
         },
         {
+          title: "Cars Colors",
+          url: "/dashboard/cars/colors",
+        },
+        {
           title: "Cars Transmisi",
           url: "/dashboard/cars/transmisi",
         },

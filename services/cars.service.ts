@@ -815,6 +815,7 @@ export const lookupKeys = {
   transmissions: [...LOOKUP_KEY_BASE, "transmissions"] as const,
   fuelTypes: [...LOOKUP_KEY_BASE, "fuelTypes"] as const,
   facilities: [...LOOKUP_KEY_BASE, "facilities"] as const,
+  colors: [...LOOKUP_KEY_BASE, "colors"] as const,
 };
 
 async function fetchTransmissions(): Promise<Transmission[]> {
@@ -831,6 +832,11 @@ async function fetchFuelTypes(): Promise<FuelType[]> {
 
 async function fetchFacilities(): Promise<Facility[]> {
   const data = await fetcher<Facility[]>(API_CONFIG.ENDPOINTS.facilities.base);
+  return Array.isArray(data) ? data : [];
+}
+
+async function fetchColors(): Promise<Color[]> {
+  const data = await fetcher<Color[]>(API_CONFIG.ENDPOINTS.colors.base);
   return Array.isArray(data) ? data : [];
 }
 
@@ -852,6 +858,13 @@ export function useFacilitiesQuery() {
   return useQuery({
     queryKey: lookupKeys.facilities,
     queryFn: fetchFacilities,
+  });
+}
+
+export function useColorsQuery() {
+  return useQuery({
+    queryKey: lookupKeys.colors,
+    queryFn: fetchColors,
   });
 }
 
@@ -1034,6 +1047,65 @@ export function useDeleteFacilityMutation() {
       toast.success("Fasilitas berhasil dihapus");
     },
     onError: (err) => toast.error(err.message || "Gagal menghapus fasilitas"),
+  });
+}
+
+// Colors mutations
+async function createColor(payload: { name: string }): Promise<Color> {
+  return fetcher<Color>(API_CONFIG.ENDPOINTS.colors.base, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+async function updateColor(
+  id: string,
+  payload: { name: string },
+): Promise<Color> {
+  return fetcher<Color>(API_CONFIG.ENDPOINTS.colors.byId(id), {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+async function deleteColor(id: string): Promise<void> {
+  await fetcher(API_CONFIG.ENDPOINTS.colors.byId(id), { method: "DELETE" });
+}
+
+export function useCreateColorMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createColor,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.colors });
+      toast.success("Warna berhasil ditambahkan");
+    },
+    onError: (err) => toast.error(err.message || "Gagal menambah warna"),
+  });
+}
+
+export function useUpdateColorMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      updateColor(id, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.colors });
+      toast.success("Warna berhasil diperbarui");
+    },
+    onError: (err) => toast.error(err.message || "Gagal memperbarui warna"),
+  });
+}
+
+export function useDeleteColorMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteColor,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: lookupKeys.colors });
+      toast.success("Warna berhasil dihapus");
+    },
+    onError: (err) => toast.error(err.message || "Gagal menghapus warna"),
   });
 }
 
