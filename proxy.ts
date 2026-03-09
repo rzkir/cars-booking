@@ -157,7 +157,7 @@ export default async function proxy(request: NextRequest) {
 
   // /profile hanya untuk customer
   const isCustomerOnlyPath = customerOnlyPaths.some((path) =>
-    pathname.startsWith(path)
+    pathname.startsWith(path),
   );
   if (isCustomerOnlyPath) {
     if (!isAuthenticated) {

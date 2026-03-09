@@ -3,6 +3,11 @@
 import { useMemo, useState } from "react";
 
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
   Bluetooth,
   Cable,
   Camera,
@@ -114,8 +119,9 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
 
   const whatsappMessage = useMemo(() => {
     const priceStr = formattedPrice.replace(",00", "");
-    return `Halo, saya tertarik dengan ${car.name} untuk ${selectedTypeLabel} (${priceStr}/hari). Apakah tersedia?`;
-  }, [car.name, selectedTypeLabel, formattedPrice]);
+    const colorPart = selectedColor ? `\nWarna: ${selectedColor}` : "";
+    return `Halo, saya tertarik dengan ${car.name}${colorPart} untuk ${selectedTypeLabel} (${priceStr}/hari). Apakah tersedia?`;
+  }, [car.name, selectedColor, selectedTypeLabel, formattedPrice]);
 
   const whatsappHref = useMemo(
     () =>
@@ -241,9 +247,33 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
             </div>
           </div>
 
-          <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#FF9500] shadow-sm shrink-0">
-            <Info className="w-6 h-6" aria-hidden />
-          </div>
+          <HoverCard openDelay={150}>
+            <HoverCardTrigger asChild>
+              <button
+                type="button"
+                aria-label="Lihat deskripsi mobil"
+                className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#FF9500] shadow-sm shrink-0 hover:bg-gray-50 transition-colors"
+              >
+                <Info className="w-6 h-6" aria-hidden />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent
+              align="end"
+              side="top"
+              className="w-80 rounded-2xl border border-gray-100 bg-white p-4 shadow-xl"
+            >
+              <div className="space-y-2">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                  Deskripsi
+                </div>
+                <div className="text-sm font-medium text-gray-700 leading-relaxed">
+                  {car.description?.trim()
+                    ? car.description
+                    : "Belum ada deskripsi untuk mobil ini."}
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         </div>
       </div>
 

@@ -2,12 +2,16 @@ import { Fragment } from "react";
 
 import CarsLayout from "@/components/cars/CarsLayout";
 
+import { carsMetadata } from "@/helper/meta/Metadata";
+
 import {
   fetchCars,
   fetchCarsSearch,
   fetchTransmissions,
   fetchFuelTypes,
 } from "@/lib/useCars";
+
+export const metadata = carsMetadata;
 
 type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

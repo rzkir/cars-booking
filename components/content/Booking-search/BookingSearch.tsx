@@ -2,7 +2,7 @@ import { Calendar, Search } from "lucide-react";
 
 export default function BookingSearch() {
   return (
-    <div className="mx-auto px-6 w-full max-w-5xl">
+    <div className="mx-auto px-6 w-full max-w-5xl pt-6">
       <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
         <div className="space-y-2">
           <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">

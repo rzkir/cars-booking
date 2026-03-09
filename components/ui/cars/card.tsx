@@ -1,5 +1,7 @@
 import { Fuel, Settings2 } from "lucide-react";
 
+import { formatIdr, parseIdrInput } from "@/hooks/format-idr";
+
 type CarCardProps = {
   image: string;
   title: string;
@@ -25,6 +27,8 @@ export function CarCard({
   status,
   slug,
 }: CarCardProps) {
+  const formattedPrice = formatIdr(parseIdrInput(price));
+
   return (
     <div className="group bg-white rounded-[2rem] border border-gray-100 overflow-hidden shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-2 transition-all duration-300">
       <div className="relative aspect-16/10 overflow-hidden bg-gray-50">
@@ -34,25 +38,28 @@ export function CarCard({
           fill
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
+        <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl">
+          <span className="text-[#FF9500] font-black text-base md:text-lg leading-none">
+            {formattedPrice}
+            <span className="text-gray-400 text-xs md:text-sm font-normal tracking-normal">
+              /hari
+            </span>
+          </span>
+        </div>
         {status && (
           <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider">
             {status}
           </div>
         )}
       </div>
-      <div className="p-8 space-y-6">
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <h4 className="text-2xl font-black">{title}</h4>
-            <p className="text-gray-400 font-medium">{subtitle}</p>
-          </div>
-          <span className="text-[#FF9500] font-black text-xl">
-            {price}
-            <span className="text-gray-400 text-sm font-normal tracking-normal">
-              /hari
-            </span>
-          </span>
+      <div className="p-4 md:p-8 space-y-6">
+        <div className="space-y-4">
+          <h4 className="text-2xl max-w-full md:max-w-56 font-black">
+            {title}
+          </h4>
+          <p className="text-gray-400 font-medium">{subtitle}</p>
         </div>
+
         <div className="flex items-center gap-4 text-gray-500 font-bold text-sm">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
             <Settings2 className="w-4 h-4" />
@@ -63,6 +70,7 @@ export function CarCard({
             <span>{fuel}</span>
           </div>
         </div>
+
         <Link
           href={`/daftar-mobil/${slug}`}
           id={`car-detail-${slug}`}

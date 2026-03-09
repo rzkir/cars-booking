@@ -4,7 +4,7 @@ import Image from "next/image";
 
 import Link from "next/link";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import CarsDetailsInteractive from "./CarsDetailsInteractive";
+import PriviewModal from "./PriviewModal";
 
 export default function CarsDetails({ car }: { car: CarDetails }) {
   const tabsId = useId();
@@ -31,8 +32,28 @@ export default function CarsDetails({ car }: { car: CarDetails }) {
   );
 
   const primaryImage = images[0] ?? null;
+  const defaultActiveImageId = primaryImage?.id ?? null;
+  const [activeImageId, setActiveImageId] = useState<string | number | null>(
+    defaultActiveImageId,
+  );
+
+  useEffect(() => {
+    setActiveImageId(defaultActiveImageId);
+  }, [defaultActiveImageId]);
+
+  const activeImage =
+    images.find((image) => image.id === activeImageId) ?? primaryImage;
   const thumbnailImages = images.slice(0, 4);
   const extraImagesCount = Math.max(images.length - 4, 0);
+
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
+
+  const openPreviewById = (id: string | number) => {
+    const nextIndex = images.findIndex((image) => image.id === id);
+    setPreviewIndex(nextIndex >= 0 ? nextIndex : 0);
+    setIsPreviewOpen(true);
+  };
 
   return (
     <main className="bg-white min-h-screen pt-20 pb-16 sm:pt-24 sm:pb-20">
@@ -64,14 +85,24 @@ export default function CarsDetails({ car }: { car: CarDetails }) {
           {/* Left: Gallery + Reviews */}
           <div className="space-y-4 sm:space-y-6">
             <div className="aspect-4/3 rounded-2xl sm:rounded-[2rem] overflow-hidden bg-gray-100 card-shadow relative">
-              {primaryImage ? (
-                <Image
-                  src={primaryImage.image_url}
-                  alt={car.name}
-                  fill
-                  sizes="(min-width: 1024px) 50vw, 100vw"
-                  className="w-full h-full object-cover"
-                />
+              {activeImage ? (
+                <button
+                  type="button"
+                  onClick={() => openPreviewById(activeImage.id)}
+                  className="group absolute inset-0"
+                  aria-label="Lihat preview gambar"
+                >
+                  <Image
+                    src={activeImage.image_url}
+                    alt={car.name}
+                    fill
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    className="w-full h-full object-cover"
+                  />
+                  <span className="pointer-events-none absolute bottom-4 left-4 rounded-full bg-black/55 px-3 py-1.5 text-xs font-bold text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                    Preview
+                  </span>
+                </button>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm font-medium">
                   Gambar mobil belum tersedia
@@ -82,7 +113,7 @@ export default function CarsDetails({ car }: { car: CarDetails }) {
             {thumbnailImages.length > 0 && (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
                 {thumbnailImages.map((image, index) => {
-                  const isFirst = index === 0;
+                  const isActive = image.id === activeImageId;
                   const isLast =
                     index === thumbnailImages.length - 1 &&
                     extraImagesCount > 0;
@@ -91,10 +122,15 @@ export default function CarsDetails({ car }: { car: CarDetails }) {
                     <button
                       key={image.id}
                       type="button"
+                      aria-label={`Pilih gambar ${index + 1}`}
+                      aria-pressed={isActive}
+                      onClick={() => {
+                        setActiveImageId(image.id);
+                      }}
                       className={`relative aspect-square overflow-hidden rounded-xl transition-opacity sm:rounded-2xl ${
-                        isFirst
+                        isActive
                           ? "border-2 border-[#FF9500] ring-4 ring-orange-50"
-                          : "hover:opacity-80"
+                          : "hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF9500]/60 focus-visible:ring-offset-2"
                       }`}
                     >
                       <Image
@@ -115,6 +151,15 @@ export default function CarsDetails({ car }: { car: CarDetails }) {
               </div>
             )}
           </div>
+
+          <PriviewModal
+            open={isPreviewOpen}
+            onOpenChange={setIsPreviewOpen}
+            images={images}
+            carName={car.name}
+            index={previewIndex}
+            onIndexChange={setPreviewIndex}
+          />
 
           {/* Right: Details + Interactive Booking */}
           <div className="space-y-6">
@@ -144,7 +189,7 @@ export default function CarsDetails({ car }: { car: CarDetails }) {
                   : "text-gray-500 hover:text-gray-900"
               }`}
             >
-              Konten
+              Informasi
             </Button>
             <Button
               id={`${tabsId}-tab-spesifikasi`}

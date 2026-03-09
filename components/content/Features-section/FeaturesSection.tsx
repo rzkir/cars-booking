@@ -2,7 +2,7 @@ import { Wallet, Key, MessageCircle } from "lucide-react";
 
 export default function FeaturesSection() {
   return (
-    <section className="py-32 bg-gray-50/30">
+    <section className="py-20 md:py-32">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white p-8 rounded-3xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100 group hover:border-[#FF9500] transition-colors duration-300">

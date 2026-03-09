@@ -32,7 +32,9 @@ export default function FeaturesCars({ cars }: { cars: CarListItem[] }) {
               image={car.car_images?.image_url ?? ""}
               title={car.name}
               subtitle={`${car.capacity} Kursi • ${
-                car.rental_type === "with_driver" ? "Dengan Sopir" : "Lepas Kunci"
+                car.rental_type === "with_driver"
+                  ? "Dengan Sopir"
+                  : "Lepas Kunci"
               }`}
               price={car.price_per_day.toString()}
               status={car.status}

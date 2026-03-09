@@ -11,6 +11,9 @@ import {
   Share2,
   Twitter,
 } from "lucide-react";
+import { contactMetadata } from "@/helper/meta/Metadata";
+
+export const metadata = contactMetadata;
 
 const cardShadow =
   "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100";
