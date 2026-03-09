@@ -134,7 +134,8 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
       <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-[#FF9500] rounded-lg text-xs font-black uppercase tracking-wider">
         {car.status}
       </div>
-      <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+
+      <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight wrap-break-word">
         {car.name}
       </h1>
 
@@ -147,7 +148,7 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
               return (
                 <li
                   key={facility}
-                  className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-2xl border border-gray-100 text-sm font-bold text-gray-700"
+                  className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 bg-gray-50 rounded-2xl border border-gray-100 text-sm font-bold text-gray-700"
                 >
                   <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-white text-[#FF9500] shadow-sm">
                     <Icon className="w-4 h-4" />
@@ -164,7 +165,7 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
         )}
       </div>
 
-      <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-6">
+      <div className="p-5 sm:p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-6">
         <div>
           <span className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-3 block">
             Pilih Tipe Rental
@@ -208,7 +209,7 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
                   key={color}
                   type="button"
                   onClick={() => setSelectedColor(color)}
-                  className={`flex-1 min-w-0 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-black text-sm transition-all ${
+                  className={`basis-[calc(50%-0.375rem)] sm:basis-[calc(33.333%-0.5rem)] md:basis-auto flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-black text-sm transition-all whitespace-nowrap ${
                     selectedColor === color
                       ? "bg-[#1a1a1a] text-white"
                       : "text-gray-500 hover:text-[#1a1a1a] bg-white"
@@ -226,18 +227,20 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
           )}
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="gap-4 flex flex-row items-center justify-between">
           <div className="space-y-1">
             <span className="text-gray-400 text-sm font-bold uppercase tracking-widest">
               Harga Sewa
             </span>
+
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-black text-[#FF9500]">
+              <span className="text-3xl sm:text-4xl font-black text-[#FF9500]">
                 {formattedPrice.replace(",00", "")}
               </span>
               <span className="text-gray-400 font-bold">/hari</span>
             </div>
           </div>
+
           <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#FF9500] shadow-sm shrink-0">
             <Info className="w-6 h-6" aria-hidden />
           </div>
@@ -245,12 +248,14 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
       </div>
 
       {/* CTA + Modal trigger */}
-      <div className="bg-[#1a1a1a] rounded-[2.5rem] p-8 md:p-12 text-white space-y-8 relative overflow-hidden">
+      <div className="bg-[#1a1a1a] rounded-[2.5rem] p-6 sm:p-8 md:p-12 text-white space-y-6 sm:space-y-8 relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[#FF9500]/10 rounded-full blur-3xl" />
 
         <div className="relative z-10 space-y-2">
-          <h3 className="text-3xl font-black">Siap Untuk Berangkat?</h3>
+          <h3 className="text-2xl sm:text-3xl font-black">
+            Siap Untuk Berangkat?
+          </h3>
           <p className="text-gray-400 font-medium">
             Pesan sekarang dan nikmati perjalanan dengan unit {car.name}.
           </p>
@@ -260,7 +265,7 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="flex-1 bg-[#1a1a1a] text-white py-5 rounded-2xl font-black text-lg btn-hover-scale border border-white/10 shadow-xl flex items-center justify-center gap-3"
+            className="flex-1 bg-[#1a1a1a] text-white py-4 sm:py-5 rounded-2xl font-black text-base sm:text-lg btn-hover-scale border border-white/10 shadow-xl flex items-center justify-center gap-3"
           >
             Booking via Form
             <ClipboardList className="w-5 h-5" />
@@ -269,7 +274,7 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 bg-[#25D366] text-white py-5 rounded-2xl font-black text-lg btn-hover-scale shadow-xl shadow-green-900/20 flex items-center justify-center gap-3"
+            className="flex-1 bg-[#25D366] text-white py-4 sm:py-5 rounded-2xl font-black text-base sm:text-lg btn-hover-scale shadow-xl shadow-green-900/20 flex items-center justify-center gap-3"
           >
             Chat WhatsApp
             <WhatsAppIcon className="w-6 h-6" />
@@ -286,7 +291,7 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
             onClick={() => setIsModalOpen(false)}
             aria-label="Tutup modal booking"
           />
-          <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto animate-modal-in">
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-6 sm:p-8 md:p-10 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto animate-modal-in">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
@@ -329,7 +334,7 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs font-black uppercase tracking-widest text-gray-400">
                       Tanggal Mulai
@@ -363,7 +368,7 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
                   />
                 </div>
 
-                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
+                <div className="p-5 sm:p-6 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <span className="font-bold text-gray-400">
                     Total Estimasi
                   </span>

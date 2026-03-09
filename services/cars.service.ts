@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
 import { useRouter, usePathname } from "next/navigation";
 
 import {
@@ -308,11 +309,16 @@ export function useCarsPublicFiltersState(initial: CarsPublicFiltersInitial) {
   const [appliedRentalType, setAppliedRentalType] = useState<
     "all" | "self_drive" | "with_driver"
   >(initialRentalType ?? "all");
-  const [selectedTransmissions, setSelectedTransmissions] = useState<Set<string>>(
+  const [selectedTransmissions, setSelectedTransmissions] = useState<
+    Set<string>
+  >(
     () =>
       new Set(
         initialTransmission
-          ? initialTransmission.split(",").map((s) => s.trim()).filter(Boolean)
+          ? initialTransmission
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
           : [],
       ),
   );
@@ -320,7 +326,10 @@ export function useCarsPublicFiltersState(initial: CarsPublicFiltersInitial) {
     () =>
       new Set(
         initialTransmission
-          ? initialTransmission.split(",").map((s) => s.trim()).filter(Boolean)
+          ? initialTransmission
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
           : [],
       ),
   );
@@ -328,7 +337,10 @@ export function useCarsPublicFiltersState(initial: CarsPublicFiltersInitial) {
     () =>
       new Set(
         initialFuelType
-          ? initialFuelType.split(",").map((s) => s.trim()).filter(Boolean)
+          ? initialFuelType
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
           : [],
       ),
   );
@@ -336,7 +348,10 @@ export function useCarsPublicFiltersState(initial: CarsPublicFiltersInitial) {
     () =>
       new Set(
         initialFuelType
-          ? initialFuelType.split(",").map((s) => s.trim()).filter(Boolean)
+          ? initialFuelType
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
           : [],
       ),
   );
