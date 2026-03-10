@@ -25,6 +25,9 @@ const adminPaths = ["/dashboard"];
 /** Path yang hanya boleh diakses oleh customer (bukan admin) */
 const customerOnlyPaths = ["/profile"];
 
+/** Path booking — wajib login (customer atau admin) */
+const bookingPaths = ["/booking", "/pesan"];
+
 /** Nama cookie session dari backend (be: session_token, httpOnly) */
 const SESSION_COOKIE_NAME = "session_token";
 
@@ -153,6 +156,14 @@ export default async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
+  }
+
+  // /booking, /pesan — wajib login untuk booking
+  const isBookingPath = bookingPaths.some((path) => pathname.startsWith(path));
+  if (isBookingPath && !isAuthenticated) {
+    const signinUrl = new URL("/signin", request.url);
+    signinUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(signinUrl);
   }
 
   // /profile hanya untuk customer

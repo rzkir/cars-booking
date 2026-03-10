@@ -46,6 +46,18 @@ export const API_CONFIG = {
       base: `${API_BASE_URL}/api/colors`,
       byId: (id: string) => `${API_BASE_URL}/api/colors/${id}`,
     },
+    bookings: {
+      base: `${API_BASE_URL}/api/bookings`,
+      byId: (id: string) => `${API_BASE_URL}/api/bookings/${id}`,
+    },
+    payments: {
+      createSnap: (bookingId: string) =>
+        `${API_BASE_URL}/api/payments/create-snap/${bookingId}`,
+      webhook: `${API_BASE_URL}/api/payments/webhook`,
+      byBooking: (bookingId: string) =>
+        `${API_BASE_URL}/api/payments/booking/${bookingId}`,
+      byId: (id: string) => `${API_BASE_URL}/api/payments/${id}`,
+    },
   },
   /** Opsi Lokasi untuk filter pencarian mobil (Quick Search) */
   LOCATION_OPTIONS: [

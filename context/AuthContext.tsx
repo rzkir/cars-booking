@@ -168,9 +168,17 @@ export function AuthProvider({
 
       toast.success("Berhasil masuk", { duration: 2000 });
 
-      // Redirect ditangani proxy (admin → /dashboard, customer → /)
+      // Redirect: gunakan ?redirect= jika ada, else admin → /dashboard, customer → /
       if (typeof window !== "undefined") {
-        window.location.href = "/";
+        const params = new URLSearchParams(window.location.search);
+        const redirectTo = params.get("redirect");
+        if (redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
+          window.location.href = redirectTo;
+        } else if (account.role === "admin") {
+          window.location.href = "/dashboard";
+        } else {
+          window.location.href = "/";
+        }
       }
 
       return account;

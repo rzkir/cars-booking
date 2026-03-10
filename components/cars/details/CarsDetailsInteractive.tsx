@@ -1,7 +1,13 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { useQuery } from "@tanstack/react-query";
+
+import { useAuth } from "@/context/AuthContext";
+import { accountKeys, getProfile } from "@/services/accounts.service";
+import { useCreateBookingMutation } from "@/services/bookings.service";
 import {
   HoverCard,
   HoverCardContent,
@@ -76,6 +82,13 @@ function WhatsAppIcon({ className }: { className?: string }) {
 }
 
 export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
+  const { user } = useAuth();
+  const pathname = usePathname();
+  const { data: profile } = useQuery({
+    queryKey: accountKeys.profile(),
+    queryFn: getProfile,
+    enabled: !!user,
+  });
   const availableColors = car.colors ?? [];
   const firstRentalType =
     (car.car_pricings?.[0]?.type as RentalType | undefined) ??
@@ -85,6 +98,14 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
   const [selectedType, setSelectedType] = useState<RentalType>(firstRentalType);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState<string | null>(firstColor);
+  const [fullName, setFullName] = useState<string | null>(null);
+  const [whatsAppNumber, setWhatsAppNumber] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
+
+  const defaultFullName = String(profile?.full_name ?? "").trim();
+  const defaultWhatsAppNumber = String(profile?.phone ?? "").trim();
 
   const getPriceForType = (type: RentalType): number => {
     const fromPricings = car.car_pricings?.find(
@@ -114,6 +135,26 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
     [pricePerDay],
   );
 
+  const totalDays = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+    if (end < start) return 0;
+    const diffDays =
+      Math.floor((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+    return Math.max(0, diffDays);
+  }, [startDate, endDate]);
+
+  const formattedTotalEstimate = useMemo(() => {
+    const total = (totalDays || 0) * pricePerDay;
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(total);
+  }, [totalDays, pricePerDay]);
+
   const selectedTypeLabel =
     selectedType === "with_driver" ? "Sewa Dengan Supir" : "Sewa Lepas Kunci";
 
@@ -129,9 +170,38 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
     [whatsappMessage],
   );
 
+  const handleOpenBookingModal = () => {
+    if (!user) {
+      const signinUrl = `/signin?redirect=${encodeURIComponent(pathname ?? "/")}`;
+      window.location.href = signinUrl;
+      return;
+    }
+    // Belum isi customer_profiles atau belum terverifikasi → arahkan ke edit profil
+    if (!profile || !profile.is_verified) {
+      const editUrl = `/profile/edit-profile?redirect=${encodeURIComponent(pathname ?? "/")}`;
+      window.location.href = editUrl;
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
+  const createBookingMutation = useCreateBookingMutation();
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsModalOpen(false);
+    createBookingMutation
+      .mutateAsync({
+        car_id: car.id,
+        rental_type: selectedType,
+        // FE menyimpan warna sebagai nama → backend akan resolve
+        color: selectedColor,
+        start_date: startDate,
+        end_date: endDate,
+        notes: notes?.trim() || null,
+      })
+      .then(() => {
+        setIsModalOpen(false);
+      });
   };
 
   return (
@@ -294,7 +364,7 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
         <div className="relative z-10 flex flex-col md:flex-row gap-4">
           <button
             type="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenBookingModal}
             className="flex-1 bg-[#1a1a1a] text-white py-4 sm:py-5 rounded-2xl font-black text-base sm:text-lg btn-hover-scale border border-white/10 shadow-xl flex items-center justify-center gap-3"
           >
             Booking via Form
@@ -349,6 +419,8 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
                     required
                     placeholder="Contoh: John Doe"
                     className="form-input text-sm font-medium placeholder:text-gray-400"
+                    value={fullName ?? defaultFullName}
+                    onChange={(e) => setFullName(e.target.value)}
                   />
                 </div>
 
@@ -361,6 +433,8 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
                     required
                     placeholder="0812-xxxx-xxxx"
                     className="form-input text-sm font-medium placeholder:text-gray-400"
+                    value={whatsAppNumber ?? defaultWhatsAppNumber}
+                    onChange={(e) => setWhatsAppNumber(e.target.value)}
                   />
                 </div>
 
@@ -373,6 +447,8 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
                       type="date"
                       required
                       className="form-input text-sm font-medium"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -383,6 +459,8 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
                       type="date"
                       required
                       className="form-input text-sm font-medium"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
                     />
                   </div>
                 </div>
@@ -395,6 +473,8 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
                     rows={3}
                     placeholder="Lokasi penjemputan, dll..."
                     className="form-input text-sm font-medium placeholder:text-gray-400 resize-none"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
                   />
                 </div>
 
@@ -402,19 +482,26 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
                   <span className="font-bold text-gray-400">
                     Total Estimasi
                   </span>
-                  <span className="text-2xl font-black text-[#FF9500]">
-                    {formattedPrice.replace(",00", "")}
-                    <span className="text-xs text-gray-400 font-normal">
-                      /hari
-                    </span>
-                  </span>
+                  <div className="text-right">
+                    <div className="text-2xl font-black text-[#FF9500]">
+                      {formattedTotalEstimate.replace(",00", "")}
+                    </div>
+                    <div className="text-xs text-gray-400 font-bold">
+                      {totalDays > 0
+                        ? `${totalDays} hari × ${formattedPrice.replace(",00", "")}/hari`
+                        : `${formattedPrice.replace(",00", "")}/hari`}
+                    </div>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
+                  disabled={createBookingMutation.isPending}
                   className="w-full bg-[#FF9500] text-white py-5 rounded-2xl font-black text-lg btn-hover-scale shadow-2xl shadow-orange-900/40"
                 >
-                  Konfirmasi Pesanan
+                  {createBookingMutation.isPending
+                    ? "Memproses..."
+                    : "Konfirmasi Pesanan"}
                 </button>
               </form>
             </div>
