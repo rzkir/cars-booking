@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  BookOpen,
   Command,
   Frame,
   LifeBuoy,
@@ -12,6 +11,7 @@ import {
   Settings2,
   SquareTerminal,
   Car,
+  MessageSquare,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -65,13 +65,13 @@ const data = {
       ],
     },
     {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
+      title: "WhatsApp",
+      url: "/dashboard/whatsapp",
+      icon: MessageSquare,
       items: [
         {
-          title: "Introduction",
-          url: "#",
+          title: "Whatsapp",
+          url: "/dashboard/whatsapp",
         },
         {
           title: "Get Started",
@@ -120,11 +120,6 @@ const data = {
     {
       title: "Feedback",
       url: "#",
-      icon: Send,
-    },
-    {
-      title: "Whatsapp",
-      url: "/dashboard/whatsapp",
       icon: Send,
     },
   ],

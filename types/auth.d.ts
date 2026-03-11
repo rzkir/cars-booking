@@ -95,12 +95,6 @@ interface EditProfileFormProps {
   cardShadow: string;
 }
 
-const ID_TYPE_OPTIONS = [
-  { value: "ktp", label: "Kartu Tanda Penduduk (KTP)" },
-  { value: "passport", label: "Passport" },
-  { value: "sim_a", label: "SIM A" },
-];
-
 type DocType = "ktp" | "sim_a" | "selfie_ktp";
 
 //====================== AuthContext ======================//

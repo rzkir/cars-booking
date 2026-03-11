@@ -1,3 +1,9 @@
+export const ID_TYPE_OPTIONS = [
+  { value: "ktp", label: "Kartu Tanda Penduduk (KTP)" },
+  { value: "passport", label: "Passport" },
+  { value: "sim_a", label: "SIM A" },
+] as const;
+
 export function normalizeNameForCompare(s: string): string {
   return (s ?? "")
     .trim()

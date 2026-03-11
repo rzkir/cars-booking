@@ -48,6 +48,7 @@ import {
 } from "@/services/accounts.service";
 
 import {
+  ID_TYPE_OPTIONS,
   normalizeNameForCompare,
   normalizeIdNumber,
 } from "@/components/ui/profile/EditProfileHelper";
