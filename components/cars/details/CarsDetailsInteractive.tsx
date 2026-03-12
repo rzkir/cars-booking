@@ -1,18 +1,23 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+
 import { useMemo, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "@/context/AuthContext";
+
 import { accountKeys, getProfile } from "@/services/accounts.service";
+
 import { useCreateBookingMutation } from "@/services/bookings.service";
+
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+
 import {
   Bluetooth,
   Cable,
@@ -33,7 +38,6 @@ import {
   X,
 } from "lucide-react";
 
-/** Map facility name (lowercase) to Lucide icon component */
 function getFacilityIcon(
   facility: string,
 ): React.ComponentType<{ className?: string }> {
@@ -67,6 +71,7 @@ type RentalType = "self_drive" | "with_driver";
 export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
   const { user } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const { data: profile } = useQuery({
     queryKey: accountKeys.profile(),
     queryFn: getProfile,
@@ -161,26 +166,27 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const customerPhone = String(
-      whatsAppNumber ?? defaultWhatsAppNumber ?? ""
+      whatsAppNumber ?? defaultWhatsAppNumber ?? "",
     ).trim();
 
     createBookingMutation
       .mutateAsync({
         car_id: car.id,
         rental_type: selectedType,
+        customer_profile_id: profile?.id ?? null,
         // FE menyimpan warna sebagai nama → backend akan resolve
         color: selectedColor,
         start_date: startDate,
         end_date: endDate,
         notes: notes?.trim() || null,
       })
-      .then(() => {
+      .then((data) => {
         setIsModalOpen(false);
         if (customerPhone) {
           const messageLines = [
-            `Halo ${(
-              fullName ?? defaultFullName ?? ""
-            ).trim() || "Customer"}, terima kasih sudah melakukan pemesanan di Space Digitalia Rent Car 🚗`,
+            `Halo ${
+              (fullName ?? defaultFullName ?? "").trim() || "Customer"
+            }, terima kasih sudah melakukan pemesanan di Space Digitalia Rent Car 🚗`,
             "",
             `Detail Booking:`,
             `• Mobil: ${car.name}`,
@@ -190,7 +196,7 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
             `• Catatan: ${notes?.trim() || "-"}`,
             "",
             `Tim admin kami akan menghubungi Anda untuk konfirmasi lebih lanjut.`,
-            `Anda juga bisa melihat detail mobil di: ${window.location.origin}${pathname ?? ""}`,
+            `Lacak status booking: ${window.location.origin}/lacak-pemesanan/${data.id}`,
           ];
           const text = messageLines.join("\n");
 
@@ -203,9 +209,13 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
               text,
             }),
           }).catch((err) => {
-            console.error("Gagal mengirim notifikasi WhatsApp ke customer", err);
+            console.error(
+              "Gagal mengirim notifikasi WhatsApp ke customer",
+              err,
+            );
           });
         }
+        router.push(`/lacak-pemesanan/${data.id}`);
       });
   };
 

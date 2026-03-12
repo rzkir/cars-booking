@@ -13,6 +13,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params;
   const car = await fetchCarsDetails(resolvedParams.slug);
 
+  if (!car) {
+    return {
+      title: "404 - Mobil tidak ditemukan",
+      description: "Mobil tidak ditemukan",
+    };
+  }
+
   const name = car.name;
   const description = car.description ?? undefined;
 

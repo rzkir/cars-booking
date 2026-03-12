@@ -1123,5 +1123,3 @@ export function useDeleteColorMutation() {
     onError: (err) => toast.error(err.message || "Gagal menghapus warna"),
   });
 }
-
-//==================== Pages: Cars List ====================//

@@ -25,7 +25,9 @@ export async function apiFetch<T>(
     const response = await fetch(url, fetchOptions);
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch: ${response.statusText}`);
+      const error = new Error(`Failed to fetch: ${response.statusText}`);
+      (error as Error & { status?: number }).status = response.status;
+      throw error;
     }
 
     return response.json();

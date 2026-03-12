@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import LacakSearchForm from "@/components/lacak-pemesanan/LacakSearchForm";
+
 import {
-  ArrowRight,
   Award,
   ChevronDown,
   Clock,
-  Hash,
   HelpCircle,
   Lock,
   Mail,
   MessageCircle,
   Phone,
-  QrCode,
   Search,
   ShieldCheck,
   Zap,
@@ -45,46 +44,16 @@ export default function Page() {
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white p-2 rounded-[2rem] shadow-2xl border border-gray-100 flex flex-col md:flex-row items-center gap-2">
-            <div className="flex-1 w-full relative group">
-              <Hash className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 text-xl group-focus-within:text-[#FF9500] transition-colors" />
-              <input
-                type="text"
-                placeholder="Contoh: DE-8829410 atau INV-8829"
-                className="w-full pl-16 pr-6 py-6 rounded-[1.5rem] bg-gray-50/50 border-none outline-none font-black text-lg focus:bg-white transition-all"
-              />
-            </div>
+        <LacakSearchForm />
 
-            <div className="flex w-full md:w-auto gap-2 px-2 pb-2 md:p-0">
-              <button
-                id="btn-scan-qr"
-                type="button"
-                className="h-[70px] px-6 bg-gray-100 text-gray-500 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition-colors"
-              >
-                <QrCode className="text-2xl w-6 h-6" />
-              </button>
-
-              <Link
-                href="/tracking-pemesanan/done"
-                id="btn-track-submit"
-                className="flex-1 h-[70px] px-10 bg-[#1a1a1a] text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-lg shadow-black/10"
-              >
-                Cari Status
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </div>
+        <div className="mt-8 flex flex-wrap justify-center gap-6 max-w-3xl mx-auto">
+          <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
+            <ShieldCheck className="text-[#FF9500] w-4 h-4" />
+            <span>Pencarian Aman &amp; Terenkripsi</span>
           </div>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-6">
-            <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
-              <ShieldCheck className="text-[#FF9500] w-4 h-4" />
-              <span>Pencarian Aman &amp; Terenkripsi</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
-              <Zap className="text-[#FF9500] w-4 h-4" />
-              <span>Hasil Instan Real-time</span>
-            </div>
+          <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
+            <Zap className="text-[#FF9500] w-4 h-4" />
+            <span>Hasil Instan Real-time</span>
           </div>
         </div>
       </section>
@@ -102,7 +71,7 @@ export default function Page() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Link
-            href="/tracking-pemesanan/pending"
+            href="/lacak-pemesanan/pending"
             id="recent-track-1"
             className="group bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] flex items-center justify-between hover:border-[#FF9500] transition-all"
           >
@@ -125,7 +94,7 @@ export default function Page() {
           </Link>
 
           <Link
-            href={`/tracking-pemesanan/done`}
+            href="/lacak-pemesanan/done"
             id="recent-track-2"
             className="group bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] flex items-center justify-between hover:border-green-500 transition-all"
           >
@@ -174,7 +143,7 @@ export default function Page() {
               </p>
             </div>
             <a
-              href="https://wa.me/"
+              href={`https://wa.me/${(process.env.NEXT_PUBLIC_WHATSAPP_CS || "6285811668557").replace(/\D/g, "")}`}
               id="alt-track-wa"
               className="inline-block text-[#25D366] font-black text-sm uppercase tracking-widest hover:underline"
             >

@@ -210,7 +210,7 @@ export async function fetchFuelTypes(): Promise<FuelType[]> {
 
 export const fetchCarsDetails = async (
   slug: string,
-): Promise<CarDetails> => {
+): Promise<CarDetails | null> => {
   try {
     const data = await apiFetch<CarDetails>(
       `${API_CONFIG.ENDPOINTS.cars.bySlug(slug)}`,
@@ -220,14 +220,14 @@ export const fetchCarsDetails = async (
     );
     return data;
   } catch (error) {
-    console.error("Error fetching cars by slug:", error);
-    // Check if it's a 404 error
+    // Treat 404 as "not found" and return null so the UI can handle it gracefully
     if (
       error instanceof Error &&
       (error as { status?: number }).status === 404
     ) {
-      throw new Error(`Cars with slug "${slug}" not found`);
+      return null;
     }
+    console.error("Error fetching cars by slug:", error);
     throw error;
   }
 };

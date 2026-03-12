@@ -70,16 +70,16 @@ const data = {
       icon: MessageSquare,
       items: [
         {
-          title: "Whatsapp",
+          title: "Get Started",
           url: "/dashboard/whatsapp",
         },
         {
-          title: "Get Started",
-          url: "#",
+          title: "Devices",
+          url: "/dashboard/whatsapp/devices",
         },
         {
-          title: "Tutorials",
-          url: "#",
+          title: "Inbox",
+          url: "/dashboard/whatsapp/inbox",
         },
         {
           title: "Changelog",

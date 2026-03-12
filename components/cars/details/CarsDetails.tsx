@@ -19,15 +19,18 @@ import {
 } from "lucide-react";
 
 import CarsDetailsInteractive from "./CarsDetailsInteractive";
+
 import PriviewModal from "./PriviewModal";
 
-export default function CarsDetails({ car }: { car: CarDetails }) {
+import CarsNotFound from "./CarsNotFound";
+
+export default function CarsDetails({ car }: { car: CarDetails | null }) {
   const tabsId = useId();
   const [activeTab, setActiveTab] = useState<
     "spesifikasi" | "konten" | "ulasan"
   >("konten");
 
-  const images = [...(car.car_images ?? [])].sort(
+  const images = [...(car?.car_images ?? [])].sort(
     (a, b) => a.position - b.position,
   );
 
@@ -54,6 +57,10 @@ export default function CarsDetails({ car }: { car: CarDetails }) {
     setPreviewIndex(nextIndex >= 0 ? nextIndex : 0);
     setIsPreviewOpen(true);
   };
+
+  if (!car) {
+    return <CarsNotFound />;
+  }
 
   return (
     <main className="bg-white min-h-screen pt-20 pb-16 sm:pt-24 sm:pb-20">
