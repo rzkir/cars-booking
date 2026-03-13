@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 
 function getBotBaseUrl() {
-  return (
-    process.env.BOT_BASE_URL ||
-    process.env.NEXT_PUBLIC_WS_URL ||
-    "http://localhost:3001"
-  );
+  return process.env.NEXT_PUBLIC_WS_URL;
 }
 
 export async function GET() {
@@ -19,4 +15,3 @@ export async function GET() {
 
   return NextResponse.json(data, { status: res.status });
 }
-

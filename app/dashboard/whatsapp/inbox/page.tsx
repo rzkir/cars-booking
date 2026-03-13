@@ -1,4 +1,4 @@
-import FeatureDevelopment from "@/helper/development/FeatureDevelopment";
+import Inbox from "@/components/dashboard/whatsapp/inbox/Inbox";
 
 export const metadata = {
   title: "WhatsApp Inbox",
@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function page() {
-  return <FeatureDevelopment />;
+  return <Inbox />;
 }

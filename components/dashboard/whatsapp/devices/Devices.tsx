@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import Image from "next/image";
 
@@ -17,26 +17,46 @@ import {
   X,
 } from "lucide-react";
 
-type ConnectionResponse = {
-  status?: string;
-  whatsappConnected?: boolean;
-  error?: string;
-  // Optional metadata from bot/backend
-  name?: string | null;
-  phoneNumber?: string | null;
-  lastSeen?: string | null;
+import { useQuery } from "@tanstack/react-query";
+
+const fetchConnection = async (): Promise<ConnectionResponse> => {
+  try {
+    const res = await fetch("/api/whatsapp/connection", {
+      cache: "no-store",
+    });
+    const data = (await res.json()) as ConnectionResponse;
+    return data;
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Gagal cek status";
+    return { error: message };
+  }
 };
 
-type QrResponse = {
-  whatsappConnected?: boolean;
-  qrDataUrl?: string | null;
-  error?: string;
+const fetchQr = async (): Promise<QrResponse> => {
+  try {
+    const res = await fetch("/api/whatsapp/qr", { cache: "no-store" });
+    const data = (await res.json()) as QrResponse;
+    return data;
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Gagal ambil QR";
+    return { error: message, qrDataUrl: null };
+  }
 };
 
 export default function WhatsAppDevicesPage() {
-  const [conn, setConn] = useState<ConnectionResponse | null>(null);
-  const [qr, setQr] = useState<QrResponse | null>(null);
-  const [loadingQr, setLoadingQr] = useState(false);
+  const connectionQuery = useQuery<ConnectionResponse>({
+    queryKey: ["whatsappConnection"],
+    queryFn: fetchConnection,
+  });
+
+  const qrQuery = useQuery<QrResponse>({
+    queryKey: ["whatsappQr"],
+    queryFn: fetchQr,
+  });
+
+  const conn = connectionQuery.data ?? null;
+  const qr = qrQuery.data ?? null;
+  const loadingQr = qrQuery.isFetching;
 
   const connectedLabel = useMemo(() => {
     if (!conn) return "Belum dicek";
@@ -44,46 +64,17 @@ export default function WhatsAppDevicesPage() {
     return conn.whatsappConnected ? "Terkoneksi" : "Belum terkoneksi";
   }, [conn]);
 
-  const refreshStatus = useCallback(async () => {
-    setConn(null);
-    try {
-      const res = await fetch("/api/whatsapp/connection", {
-        cache: "no-store",
-      });
-      const data = (await res.json()) as ConnectionResponse;
-      setConn(data);
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Gagal cek status";
-      setConn({ error: message });
-    }
-  }, []);
-
-  const refreshQr = useCallback(async () => {
-    setLoadingQr(true);
-    try {
-      const res = await fetch("/api/whatsapp/qr", { cache: "no-store" });
-      const data = (await res.json()) as QrResponse;
-      setQr(data);
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Gagal ambil QR";
-      setQr({ error: message, qrDataUrl: qr?.qrDataUrl ?? null });
-    } finally {
-      setLoadingQr(false);
-    }
-  }, [qr?.qrDataUrl]);
-
-  useEffect(() => {
-    refreshStatus();
-    refreshQr();
-  }, [refreshStatus, refreshQr]);
+  const handleRefreshQr = () => {
+    void qrQuery.refetch();
+  };
 
   const isOnline = conn?.whatsappConnected;
 
   return (
-    <div className="flex min-h-screen flex-col bg-card rounded-3xl">
-      <main className="relative flex-1 overflow-y-auto">
+    <div className="flex min-h-screen flex-col bg-card rounded-3xl px-6">
+      <main className="relative flex-1 overflow-y-auto space-y-6">
         {/* Scanner / default view */}
-        <div className="mx-auto space-y-8 p-8">
+        <section className="mx-auto space-y-8">
           {/* Sticky page header */}
           <header className="sticky top-0 z-30 mb-6 flex items-center justify-between border-b border-border bg-card px-2 py-4 md:px-0">
             <div>
@@ -106,7 +97,7 @@ export default function WhatsAppDevicesPage() {
               <Button
                 type="button"
                 className="flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
-                onClick={refreshQr}
+                onClick={handleRefreshQr}
                 disabled={loadingQr}
               >
                 <RefreshCcw className="h-4 w-4" />
@@ -117,60 +108,107 @@ export default function WhatsAppDevicesPage() {
 
           {/* QR + guide section */}
           <section className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            {/* QR card */}
-            <div className="flex flex-col items-center rounded-3xl border border-border bg-primary p-8 text-center shadow-sm">
-              <h3 className="mb-6 text-lg font-bold text-primary-foreground">
-                Link a New Account
-              </h3>
-
-              <div className="relative mb-6 rounded-2xl border-2 border-dashed border-border bg-card p-6">
-                <div className="relative flex h-48 w-48 items-center justify-center rounded-lg bg-card p-2 shadow-inner">
-                  {qr?.qrDataUrl ? (
-                    <Image
-                      src={qr.qrDataUrl}
-                      alt="WhatsApp QR"
-                      width={200}
-                      height={200}
-                      unoptimized
-                      className="h-full w-full opacity-90"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center rounded-md bg-card text-xs text-muted-foreground">
-                      QR belum tersedia
+            {/* QR / status card */}
+            <div className="flex flex-col items-center rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
+              {isOnline ? (
+                <>
+                  <h3 className="mb-3 text-lg font-bold text-card-foreground">
+                    Device Connected
+                  </h3>
+                  <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-card text-[#008069] shadow-inner">
+                    <ShieldCheck className="h-10 w-10" />
+                  </div>
+                  <p className="mb-4 px-4 text-sm text-card-foreground/90">
+                    WhatsApp sudah <strong>terhubung</strong> ke perangkat ini.
+                    Pastikan ponsel tetap online agar pesan berjalan lancar.
+                  </p>
+                  <div className="mb-6 w-full rounded-2xl bg-muted p-4 text-left text-xs text-card-foreground space-y-6">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Nama</span>
+                      <span className="font-semibold">{conn?.name || "-"}</span>
                     </div>
-                  )}
+                    <div className="mt-2 flex justify-between">
+                      <span className="text-muted-foreground">Nomor</span>
+                      <span className="font-semibold">
+                        {conn?.phoneNumber || "-"}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex justify-between">
+                      <span className="text-muted-foreground">Last Active</span>
+                      <span className="font-semibold">
+                        {conn?.lastSeen
+                          ? new Date(conn.lastSeen).toLocaleString()
+                          : "-"}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex items-center gap-2 rounded-lg bg-[#008069] px-4 py-2 text-sm font-bold text-white hover:bg-[#008069]/5"
+                    onClick={handleRefreshQr}
+                    disabled={loadingQr}
+                  >
+                    <RefreshCcw className="h-4 w-4" />
+                    {loadingQr ? "Refreshing..." : "Tampilkan QR Baru"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <h3 className="mb-6 text-lg font-bold text-primary-foreground">
+                    Link a New Account
+                  </h3>
 
-                  {loadingQr ? (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-card/70 backdrop-blur-[1px]">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                        <RefreshCcw className="h-5 w-5 animate-spin" />
-                      </div>
+                  <div className="relative mb-6 rounded-2xl border-2 border-dashed border-border bg-card p-6">
+                    <div className="relative flex h-48 w-48 items-center justify-center rounded-lg bg-card p-2 shadow-inner">
+                      {qr?.qrDataUrl ? (
+                        <Image
+                          src={qr.qrDataUrl}
+                          alt="WhatsApp QR"
+                          width={200}
+                          height={200}
+                          unoptimized
+                          className="h-full w-full opacity-90"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center rounded-md bg-card text-xs text-muted-foreground">
+                          QR belum tersedia
+                        </div>
+                      )}
+
+                      {loadingQr ? (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-card/70 backdrop-blur-[1px]">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <RefreshCcw className="h-5 w-5 animate-spin" />
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <p className="mb-6 px-4 text-sm text-muted-foreground">
+                    Scan QR Code ini menggunakan WhatsApp di ponsel Anda melalui
+                    menu <strong>Linked Devices</strong>.
+                  </p>
+
+                  {qr?.error ? (
+                    <div className="mb-4 w-full rounded-2xl border border-red-100 bg-card px-4 py-3 text-xs text-destructive">
+                      {qr.error}
                     </div>
                   ) : null}
-                </div>
-              </div>
 
-              <p className="mb-6 px-4 text-sm text-muted-foreground">
-                Scan QR Code ini menggunakan WhatsApp di ponsel Anda melalui
-                menu <strong>Linked Devices</strong>.
-              </p>
-
-              {qr?.error ? (
-                <div className="mb-4 w-full rounded-2xl border border-red-100 bg-card px-4 py-3 text-xs text-destructive">
-                  {qr.error}
-                </div>
-              ) : null}
-
-              <Button
-                type="button"
-                variant="ghost"
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-[#008069] hover:bg-[#008069]/5 hover:text-[#00695C]"
-                onClick={refreshQr}
-                disabled={loadingQr}
-              >
-                <RefreshCcw className="h-4 w-4" />
-                {loadingQr ? "Refreshing..." : "Refresh QR Code"}
-              </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-[#008069] hover:bg-[#008069]/5 hover:text-[#00695C]"
+                    onClick={handleRefreshQr}
+                    disabled={loadingQr}
+                  >
+                    <RefreshCcw className="h-4 w-4" />
+                    {loadingQr ? "Refreshing..." : "Refresh QR Code"}
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* How to connect card */}
@@ -221,10 +259,10 @@ export default function WhatsAppDevicesPage() {
               </div>
             </div>
           </section>
-        </div>
+        </section>
 
         {/* Devices list view */}
-        <section className="mx-auto space-y-8 p-8">
+        <section className="mx-auto space-y-8 mb-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-extrabold tracking-tight text-card-foreground">
               Devices List
@@ -278,6 +316,18 @@ export default function WhatsAppDevicesPage() {
                   {conn?.lastSeen
                     ? new Date(conn.lastSeen).toLocaleString()
                     : "-"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">IP Address</span>
+                <span className="font-semibold text-card-foreground">
+                  {conn?.ip || "-"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Hostname</span>
+                <span className="font-semibold text-card-foreground">
+                  {conn?.hostname || "-"}
                 </span>
               </div>
             </div>
