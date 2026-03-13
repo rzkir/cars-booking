@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { useState, useRef, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState, useRef, useEffect } from "react";
 import {
   ArrowLeft,
   Phone,
@@ -37,8 +37,8 @@ const fetchMessages = async (jid: string) => {
     cache: "no-store",
   });
   const data = await res.json();
-  if (!res.ok) return { error: data?.error, items: [] };
-  return { items: data?.items ?? [] };
+  if (!res.ok) return { error: data?.error, items: [], typing: false };
+  return { items: data?.items ?? [], typing: !!data?.typing };
 };
 
 type ChatMessage = {
@@ -79,6 +79,7 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   const { data: inboxData } = useQuery({
     queryKey: ["whatsappInbox"],
@@ -93,7 +94,33 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
   });
 
   const chat = inboxData?.items?.find((c: { jid: string }) => c.jid === jid);
-  const messages: ChatMessage[] = messagesData?.items ?? [];
+  // Baileys sometimes causes duplicates across LID vs s.whatsapp.net,
+  // or repeated history sync. Dedupe for rendering stability.
+  const messages: ChatMessage[] = useMemo(() => {
+    const messagesRaw: ChatMessage[] = messagesData?.items ?? [];
+    const seen = new Set<string>();
+    const out: ChatMessage[] = [];
+
+    for (const m of messagesRaw) {
+      const ts = m.timestamp ? new Date(m.timestamp).getTime() : 0;
+      // Use a stable signature; ignore the random `id` if duplicates come with different ids.
+      const key = [
+        m.fromMe ? "me" : "them",
+        m.jid || "",
+        (m.messageType ?? "text").toString(),
+        (m.text ?? "").trim(),
+        // bucket timestamp into 2s window to collapse near-identical duplicates
+        ts ? Math.floor(ts / 2000) : 0,
+      ].join("|");
+
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(m);
+    }
+
+    return out;
+  }, [messagesData?.items]);
+  const isTyping = !!messagesData?.typing;
   const displayName =
     chat?.name || chat?.phoneNumber || jid.split("@")[0] || "Unknown";
   const phoneFormatted = chat?.phoneNumber
@@ -125,6 +152,11 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
         return;
       }
       setMessage("");
+      // Force refresh so the sent message appears immediately.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["whatsappInbox"] }),
+        queryClient.invalidateQueries({ queryKey: ["whatsappMessages", jid] }),
+      ]);
     } catch {
       alert("Gagal mengirim pesan");
     } finally {
@@ -147,16 +179,28 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
     return acc;
   }, []);
 
+  // Simple read indicator heuristic: if there is an incoming message after
+  // an outgoing one, we assume previous outgoing messages have been read.
+  const lastIncomingTs = useMemo(() => {
+    let max = 0;
+    for (const m of messages) {
+      if (m.fromMe) continue;
+      const ts = m.timestamp ? new Date(m.timestamp).getTime() : 0;
+      if (ts > max) max = ts;
+    }
+    return max;
+  }, [messages]);
+
   return (
-    <div className="flex flex-1 min-h-0 overflow-hidden rounded-3xl border border-gray-200 bg-wa-light shadow-sm">
+    <div className="flex flex-1 min-h-0 overflow-hidden rounded-3xl">
       {/* CENTER: CHAT WINDOW */}
-      <section className="flex-1 flex flex-col bg-white border-r border-gray-200 min-w-0">
+      <section className="flex-1 flex flex-col bg-card border-r border-border min-w-0">
         {/* Chat Header */}
-        <header className="h-16 px-4 md:px-6 flex items-center justify-between border-b border-gray-100 shrink-0 bg-white z-10">
+        <header className="h-16 px-4 md:px-6 flex items-center justify-between border-b border-border shrink-0 bg-card z-10">
           <div className="flex items-center gap-3 md:gap-4 min-w-0">
             <Link
               href="/dashboard/whatsapp/inbox"
-              className="shrink-0 p-1.5 text-gray-500 hover:text-wa-teal transition-colors lg:hidden"
+              className="shrink-0 p-1.5 text-muted-foreground hover:text-primary transition-colors lg:hidden"
               aria-label="Kembali ke inbox"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -166,28 +210,30 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
               <img
                 src={avatarUrl}
                 alt=""
-                className="w-10 h-10 rounded-full bg-gray-100 object-cover"
+                className="w-10 h-10 rounded-full bg-muted object-cover"
               />
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-primary border-2 border-background rounded-full" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-bold text-gray-900 leading-tight truncate">
+              <h2 className="font-bold text-foreground leading-tight truncate">
                 {displayName}
               </h2>
-              <p className="text-xs text-green-500 font-medium">Online</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                {isTyping ? "Sedang mengetik..." : "Online"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-1 md:gap-4 shrink-0">
             <button
               type="button"
-              className="p-2.5 text-gray-400 hover:text-wa-teal hover:bg-wa-teal/5 rounded-xl transition-all"
+              className="p-2.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
               title="Call"
             >
               <Phone className="w-5 h-5" />
             </button>
             <button
               type="button"
-              className="p-2.5 text-gray-400 hover:text-wa-teal hover:bg-wa-teal/5 rounded-xl transition-all"
+              className="p-2.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
               title="Video"
             >
               <Video className="w-5 h-5" />
@@ -195,7 +241,7 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
             <div className="h-6 w-px bg-gray-200 mx-0.5 hidden md:block" />
             <button
               type="button"
-              className="p-2.5 text-gray-400 hover:text-wa-teal hover:bg-wa-teal/5 rounded-xl transition-all"
+              className="p-2.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
               title="Info"
             >
               <Info className="w-5 h-5" />
@@ -204,10 +250,10 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
         </header>
 
         {/* Message History Area */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-slate-50/50 no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-muted/50 no-scrollbar">
           {groupedMessages.length === 0 && !chat?.lastMessage ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-gray-500 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Belum ada pesan. Kirim pesan untuk memulai percakapan.
               </p>
             </div>
@@ -216,7 +262,7 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
               {groupedMessages.map((group) => (
                 <div key={group.date} className="space-y-6">
                   <div className="flex justify-center">
-                    <span className="px-4 py-1.5 bg-gray-200/50 text-gray-500 text-[11px] font-bold rounded-full uppercase tracking-wider">
+                    <span className="px-4 py-1.5 bg-muted/50 text-muted-foreground text-[11px] font-bold rounded-full uppercase tracking-wider">
                       {group.date}
                     </span>
                   </div>
@@ -229,8 +275,8 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
                         <div className="flex flex-col items-end gap-1">
                           {msg.messageType === "document" ? (
                             <div className="message-sent p-4 rounded-2xl shadow-sm flex items-center gap-4 bg-[#00695C] min-w-[200px]">
-                              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
-                                <FileText className="w-5 h-5 text-white" />
+                              <div className="w-10 h-10 bg-background/20 rounded-lg flex items-center justify-center shrink-0">
+                                <FileText className="w-5 h-5 text-foreground" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-bold truncate">
@@ -242,7 +288,7 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
                               </div>
                               <button
                                 type="button"
-                                className="p-1.5 hover:bg-white/10 rounded-lg shrink-0"
+                                className="p-1.5 hover:bg-background/10 rounded-lg shrink-0"
                               >
                                 <Download className="w-4 h-4" />
                               </button>
@@ -269,10 +315,27 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
                             </div>
                           )}
                           <div className="flex items-center gap-1.5 mr-1">
-                            <span className="text-[10px] text-gray-400 font-medium">
-                              {formatTime(msg.timestamp)}
-                            </span>
-                            <CheckCheck className="w-3.5 h-3.5 text-wa-teal" />
+                            {(() => {
+                              const ts = msg.timestamp
+                                ? new Date(msg.timestamp).getTime()
+                                : 0;
+                              const isRead =
+                                lastIncomingTs > 0 && ts <= lastIncomingTs;
+                              return (
+                                <>
+                                  <span className="text-[10px] text-muted-foreground font-medium">
+                                    {formatTime(msg.timestamp)}
+                                  </span>
+                                  <CheckCheck
+                                    className={`w-3.5 h-3.5 ${
+                                      isRead
+                                        ? "text-wa-teal"
+                                        : "text-muted-foreground"
+                                    }`}
+                                  />
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -282,7 +345,7 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
                         <img
                           src={avatarUrl}
                           alt=""
-                          className="w-8 h-8 rounded-full self-end bg-gray-200 shrink-0 object-cover"
+                          className="w-8 h-8 rounded-full self-end bg-muted shrink-0 object-cover"
                         />
                         <div className="flex flex-col gap-1 min-w-0">
                           {msg.imageUrl ? (
@@ -306,7 +369,7 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
                               </p>
                             </div>
                           )}
-                          <span className="text-[10px] text-gray-400 font-medium ml-1">
+                          <span className="text-[10px] text-muted-foreground font-medium ml-1">
                             {formatTime(msg.timestamp)}
                           </span>
                         </div>
@@ -321,19 +384,19 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
         </div>
 
         {/* Chat Input Section */}
-        <footer className="px-4 md:px-6 py-4 bg-white border-t border-gray-100 shrink-0">
+        <footer className="px-4 md:px-6 py-4 bg-card border-t border-border shrink-0">
           <form onSubmit={handleSend} className="flex items-center gap-3">
             <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
-                className="p-2.5 text-gray-400 hover:text-wa-teal transition-colors rounded-full hover:bg-wa-teal/5"
+                className="p-2.5 text-muted-foreground hover:text-primary transition-colors rounded-full hover:bg-primary/5"
                 title="Emoji"
               >
                 <Smile className="w-6 h-6" />
               </button>
               <button
                 type="button"
-                className="p-2.5 text-gray-400 hover:text-wa-teal transition-colors rounded-full hover:bg-wa-teal/5"
+                className="p-2.5 text-muted-foreground hover:text-primary transition-colors rounded-full hover:bg-primary/5"
                 title="Lampirkan"
               >
                 <Paperclip className="w-6 h-6" />
@@ -345,12 +408,12 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Ketik pesan..."
-                className="w-full pl-4 md:pl-6 pr-12 py-3.5 bg-gray-50 border border-transparent focus:bg-white focus:border-wa-teal/30 focus:ring-4 focus:ring-wa-teal/5 rounded-full transition-all text-[15px] outline-none"
+                className="w-full pl-4 md:pl-6 pr-12 py-3.5 bg-muted border border-transparent focus:bg-background focus:border-primary/30 focus:ring-4 focus:ring-primary/5 rounded-full transition-all text-[15px] outline-none"
                 disabled={sending}
               />
               <button
                 type="button"
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-wa-teal transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                 title="Voice"
               >
                 <Mic className="w-5 h-5" />
@@ -359,7 +422,7 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
             <button
               type="submit"
               disabled={sending || !message.trim()}
-              className="w-12 h-12 bg-wa-teal text-white rounded-full flex items-center justify-center shadow-lg shadow-wa-teal/20 hover:bg-[#065e52] disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95 shrink-0"
+              className="w-12 h-12 bg-primary text-background rounded-full flex items-center justify-center shadow-lg shadow-primary/20 hover:bg-[#065e52] disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95 shrink-0"
               title="Kirim"
             >
               <SendHorizontal className="w-6 h-6 ml-0.5" />
@@ -369,10 +432,10 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
       </section>
 
       {/* RIGHT: CONTACT INFO SIDEBAR */}
-      <aside className="hidden lg:flex flex-col w-80 bg-white shrink-0 border-l border-gray-100">
+      <aside className="hidden lg:flex flex-col w-80 bg-card shrink-0 border-l border-border">
         <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-24 h-24 rounded-full bg-slate-100 p-1 border-2 border-wa-teal mb-4 overflow-hidden">
+            <div className="w-24 h-24 rounded-full bg-muted p-1 border-2 border-primary mb-4 overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={avatarUrl}
@@ -380,33 +443,35 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
                 className="w-full h-full rounded-full object-cover"
               />
             </div>
-            <h3 className="text-xl font-bold text-gray-900">{displayName}</h3>
-            <p className="text-gray-500 font-medium">{phoneFormatted}</p>
-            <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-green-500 bg-green-50 px-3 py-1 rounded-full">
-              <span className="w-2 h-2 bg-green-500 rounded-full" />
+            <h3 className="text-xl font-bold text-foreground">{displayName}</h3>
+            <p className="text-muted-foreground font-medium">
+              {phoneFormatted}
+            </p>
+            <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
+              <span className="w-2 h-2 bg-primary rounded-full" />
               Online
             </div>
           </div>
 
           <div className="space-y-6 mb-8">
             <div>
-              <h4 className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">
+              <h4 className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-widest mb-3">
                 Information
               </h4>
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-sm">
-                  <Mail className="w-5 h-5 text-gray-400 shrink-0" />
-                  <span className="text-gray-700 truncate">
+                  <Mail className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <span className="text-foreground truncate">
                     {phoneFormatted.replace(/\s/g, "")}@wa
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <MapPin className="w-5 h-5 text-gray-400 shrink-0" />
-                  <span className="text-gray-700">-</span>
+                  <MapPin className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <span className="text-foreground">-</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <Clock className="w-5 h-5 text-gray-400 shrink-0" />
-                  <span className="text-gray-700">
+                  <Clock className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <span className="text-foreground">
                     {chat?.lastMessageAt
                       ? `Last seen ${new Date(chat.lastMessageAt).toLocaleString()}`
                       : "-"}
@@ -419,39 +484,39 @@ export default function ChatDetail({ jid }: ChatDetailProps) {
           <div className="space-y-2">
             <button
               type="button"
-              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-all group"
+              className="w-full flex items-center justify-between p-4 bg-muted/50 hover:bg-muted rounded-2xl transition-all group"
             >
               <div className="flex items-center gap-3">
-                <DownloadCloud className="w-5 h-5 text-gray-500 group-hover:text-wa-teal transition-colors shrink-0" />
-                <span className="text-sm font-semibold text-gray-700">
+                <DownloadCloud className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                <span className="text-sm font-semibold text-foreground">
                   Export Chat
                 </span>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-300 shrink-0" />
+              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
             </button>
             <button
               type="button"
-              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-all group"
+              className="w-full flex items-center justify-between p-4 bg-muted/50 hover:bg-muted rounded-2xl transition-all group"
             >
               <div className="flex items-center gap-3">
-                <Eraser className="w-5 h-5 text-gray-500 group-hover:text-amber-500 transition-colors shrink-0" />
-                <span className="text-sm font-semibold text-gray-700">
+                <Eraser className="w-5 h-5 text-muted-foreground group-hover:text-amber-500 transition-colors shrink-0" />
+                <span className="text-sm font-semibold text-foreground">
                   Clear Chat
                 </span>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-300 shrink-0" />
+              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
             </button>
             <div className="pt-4 space-y-2">
               <button
                 type="button"
-                className="w-full py-3 text-red-500 font-bold text-sm bg-red-50 hover:bg-red-100 rounded-2xl transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 text-destructive font-bold text-sm bg-destructive/10 hover:bg-destructive/20 rounded-2xl transition-colors flex items-center justify-center gap-2"
               >
                 <Slash className="w-4 h-4" />
                 Block Contact
               </button>
               <button
                 type="button"
-                className="w-full py-3 text-gray-400 font-bold text-sm hover:text-red-600 transition-colors"
+                className="w-full py-3 text-muted-foreground font-bold text-sm hover:text-destructive transition-colors"
               >
                 Report Spam
               </button>
