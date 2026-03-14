@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-
-import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 
 import {
   AlertCircle,
@@ -13,7 +12,6 @@ import {
   ChevronRight,
   Clock,
   Copy,
-  CreditCard,
   Download,
   Mail,
   MessageCircle,
@@ -47,19 +45,22 @@ function formatDate(s: string) {
 type Props = { idOrStatus: string };
 
 export default function LacakPemesananDetail({ idOrStatus }: Props) {
+  const searchParams = useSearchParams();
+  const isPaymentSuccess = searchParams.get("payment") === "success";
   const isDemoStatus = DEMO_STATUSES.has(idOrStatus);
-  const { data: booking, isLoading, isError } = useBookingQuery(
-    isDemoStatus ? null : idOrStatus,
-    { enabled: !isDemoStatus }
-  );
+  const {
+    data: booking,
+    isLoading,
+    isError,
+  } = useBookingQuery(isDemoStatus ? null : idOrStatus, {
+    enabled: !isDemoStatus,
+  });
 
-  const useDemo = isDemoStatus;
   const status = (booking?.status ?? idOrStatus) as string;
   const isPending = status === "pending";
   const isConfirmed = status === "confirmed";
   const isOngoing = status === "ongoing";
   const isCancelled = status === "cancelled";
-  const isDone = status === "done";
 
   const meta = data.tracking_statuses.find((item) => item.status === status);
 
@@ -122,7 +123,10 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
     } as (typeof data.tracking_statuses)[number]);
 
   const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_CS || "6285811668557";
-  const waShareUrl = `https://wa.me/${waNumber.replace(/\D/g, "")}`;
+  const waBase = `https://wa.me/${waNumber.replace(/\D/g, "")}`;
+  const waShareUrl = `${waBase}?text=${encodeURIComponent("Halo, saya ingin bertanya tentang booking " + (booking?.id ?? idOrStatus))}`;
+  const waPaymentSuccessMessage = `Halo, pembayaran saya untuk booking ${booking?.id ?? idOrStatus} telah berhasil. Mohon konfirmasi.`;
+  const waPaymentSuccessUrl = `${waBase}?text=${encodeURIComponent(waPaymentSuccessMessage)}`;
 
   if (!isDemoStatus && isLoading) {
     return (
@@ -183,6 +187,34 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
           <span className="text-[#FF9500]">Invoice</span>
         </nav>
 
+        {isPaymentSuccess && !isDemoStatus && (
+          <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="font-bold text-green-800 dark:text-green-200">
+                  Pembayaran berhasil
+                </p>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  Status booking akan diperbarui. Kirim konfirmasi ke kami via
+                  WhatsApp.
+                </p>
+              </div>
+            </div>
+            <a
+              href={waPaymentSuccessUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-5 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shrink-0"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Kirim konfirmasi pembayaran ke WhatsApp
+            </a>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
             <h1 className="text-3xl font-black tracking-tight">
@@ -206,7 +238,7 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
               Download PDF
             </button>
             <a
-              href={`${waShareUrl}?text=Halo,%20saya%20ingin%20bertanya%20tentang%20booking%20${encodeURIComponent(bookingId)}`}
+              href={waShareUrl}
               className="flex items-center gap-2 bg-[#25D366] text-white px-5 py-3 rounded-xl font-bold text-sm"
             >
               <MessageCircle className="w-4 h-4" />

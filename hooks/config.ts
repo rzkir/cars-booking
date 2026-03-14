@@ -53,6 +53,8 @@ export const API_CONFIG = {
     payments: {
       createSnap: (bookingId: string) =>
         `${API_BASE_URL}/api/payments/create-snap/${bookingId}`,
+      sync: (paymentId: string) =>
+        `${API_BASE_URL}/api/payments/sync/${paymentId}`,
       webhook: `${API_BASE_URL}/api/payments/webhook`,
       byBooking: (bookingId: string) =>
         `${API_BASE_URL}/api/payments/booking/${bookingId}`,

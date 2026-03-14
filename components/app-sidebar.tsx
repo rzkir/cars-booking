@@ -8,10 +8,10 @@ import {
   Map,
   PieChart,
   Send,
-  Settings2,
   SquareTerminal,
   Car,
   MessageSquare,
+  Calendar,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -88,17 +88,17 @@ const data = {
       ],
     },
     {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
+      title: "Bookings",
+      url: "/dashboard/bookings",
+      icon: Calendar,
       items: [
         {
-          title: "General",
-          url: "#",
+          title: "All Bookings",
+          url: "/dashboard/bookings",
         },
         {
-          title: "Team",
-          url: "#",
+          title: "My Bookings",
+          url: "/dashboard/bookings/my-bookings",
         },
         {
           title: "Billing",

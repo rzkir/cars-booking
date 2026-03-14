@@ -6,7 +6,6 @@ import { toast } from "sonner";
 
 import { API_CONFIG } from "@/hooks/config";
 
-/** Normalisasi role seperti di be: hanya "admin" (case-insensitive) = admin, selain itu customer */
 function normalizeRole(role: unknown): "admin" | "customer" {
   return String(role ?? "").toLowerCase() === "admin" ? "admin" : "customer";
 }
@@ -172,7 +171,11 @@ export function AuthProvider({
       if (typeof window !== "undefined") {
         const params = new URLSearchParams(window.location.search);
         const redirectTo = params.get("redirect");
-        if (redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
+        if (
+          redirectTo &&
+          redirectTo.startsWith("/") &&
+          !redirectTo.startsWith("//")
+        ) {
           window.location.href = redirectTo;
         } else if (account.role === "admin") {
           window.location.href = "/dashboard";

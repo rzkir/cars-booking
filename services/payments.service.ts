@@ -57,6 +57,31 @@ async function fetchPaymentById(id: string): Promise<PaymentWithBooking> {
   return fetcher<PaymentWithBooking>(API_CONFIG.ENDPOINTS.payments.byId(id));
 }
 
+export interface SyncPaymentResponse {
+  status: "paid" | "unpaid" | "failed";
+  midtrans_status: string | null;
+  payment: PaymentWithBooking | Record<string, unknown>;
+}
+
+async function syncPaymentStatus(paymentId: string): Promise<SyncPaymentResponse> {
+  return fetcher<SyncPaymentResponse>(
+    API_CONFIG.ENDPOINTS.payments.sync(paymentId),
+    { method: "POST" },
+  );
+}
+
+export function useSyncPaymentMutation(bookingId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (paymentId: string) => syncPaymentStatus(paymentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: paymentsKeys.byBooking(bookingId),
+      });
+    },
+  });
+}
+
 export function useCreateSnapMutation(bookingId: string) {
   const queryClient = useQueryClient();
   return useMutation({

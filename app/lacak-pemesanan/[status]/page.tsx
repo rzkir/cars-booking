@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import LacakPemesananDetail from "@/components/lacak-pemesanan/LacakPemesananDetail";
 
@@ -14,5 +15,9 @@ type PageProps = {
 
 export default async function Page({ params }: PageProps) {
   const { status } = await params;
-  return <LacakPemesananDetail idOrStatus={status} />;
+  return (
+    <Suspense fallback={<div className="min-h-screen pt-32 flex justify-center">Memuat...</div>}>
+      <LacakPemesananDetail idOrStatus={status} />
+    </Suspense>
+  );
 }
