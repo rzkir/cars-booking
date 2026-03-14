@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
+
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
 import {
   AlertCircle,
@@ -12,18 +12,18 @@ import {
   ChevronRight,
   Clock,
   Copy,
-  Download,
   Mail,
   MessageCircle,
-  Printer,
   ShieldCheck,
   User,
 } from "lucide-react";
 
 import data from "@/helper/data/data.json";
+
 import { useBookingQuery } from "@/services/bookings.service";
 
 const KNOWN_STATUSES = ["pending", "confirmed", "ongoing", "done", "cancelled"];
+
 const DEMO_STATUSES = new Set(KNOWN_STATUSES);
 
 function formatRupiah(n: number) {
@@ -45,8 +45,6 @@ function formatDate(s: string) {
 type Props = { idOrStatus: string };
 
 export default function LacakPemesananDetail({ idOrStatus }: Props) {
-  const searchParams = useSearchParams();
-  const isPaymentSuccess = searchParams.get("payment") === "success";
   const isDemoStatus = DEMO_STATUSES.has(idOrStatus);
   const {
     data: booking,
@@ -97,7 +95,7 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
   const StatusIcon =
     isPending || isOngoing ? Clock : isCancelled ? AlertCircle : CheckCircle2;
 
-  const resolvedMeta =
+  const baseMeta =
     meta ??
     ({
       status,
@@ -122,11 +120,14 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
       badgeLabel: "",
     } as (typeof data.tracking_statuses)[number]);
 
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_CS || "6285811668557";
-  const waBase = `https://wa.me/${waNumber.replace(/\D/g, "")}`;
-  const waShareUrl = `${waBase}?text=${encodeURIComponent("Halo, saya ingin bertanya tentang booking " + (booking?.id ?? idOrStatus))}`;
-  const waPaymentSuccessMessage = `Halo, pembayaran saya untuk booking ${booking?.id ?? idOrStatus} telah berhasil. Mohon konfirmasi.`;
-  const waPaymentSuccessUrl = `${waBase}?text=${encodeURIComponent(waPaymentSuccessMessage)}`;
+  const resolvedMeta = {
+    ...baseMeta,
+    title: isPending
+      ? "Menunggu Konfirmasi"
+      : isConfirmed
+        ? "Menunggu Pembayaran"
+        : baseMeta.title,
+  };
 
   if (!isDemoStatus && isLoading) {
     return (
@@ -174,7 +175,7 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
 
   return (
     <main className="pt-24 md:pt-32 pb-20 px-6 bg-[#fcfcfc] min-h-screen">
-      <div className="max-w-5xl mx-auto">
+      <div className="container mx-auto">
         <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-8">
           <Link href="/" className="hover:text-[#1a1a1a]">
             Beranda
@@ -187,34 +188,6 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
           <span className="text-[#FF9500]">Invoice</span>
         </nav>
 
-        {isPaymentSuccess && !isDemoStatus && (
-          <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="font-bold text-green-800 dark:text-green-200">
-                  Pembayaran berhasil
-                </p>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  Status booking akan diperbarui. Kirim konfirmasi ke kami via
-                  WhatsApp.
-                </p>
-              </div>
-            </div>
-            <a
-              href={waPaymentSuccessUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-5 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shrink-0"
-            >
-              <MessageCircle className="w-5 h-5" />
-              Kirim konfirmasi pembayaran ke WhatsApp
-            </a>
-          </div>
-        )}
-
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
             <h1 className="text-3xl font-black tracking-tight">
@@ -222,29 +195,7 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
             </h1>
             <p className="text-gray-400 font-medium">{resolvedMeta.message}</p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              className="flex items-center gap-2 bg-white border border-gray-200 px-5 py-3 rounded-xl font-bold text-sm hover:border-[#1a1a1a] transition-all"
-            >
-              <Printer className="w-4 h-4" />
-              Cetak
-            </button>
-            <button
-              type="button"
-              className="flex items-center gap-2 bg-white border border-gray-200 px-5 py-3 rounded-xl font-bold text-sm hover:border-[#1a1a1a] transition-all"
-            >
-              <Download className="w-4 h-4" />
-              Download PDF
-            </button>
-            <a
-              href={waShareUrl}
-              className="flex items-center gap-2 bg-[#25D366] text-white px-5 py-3 rounded-xl font-bold text-sm"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Bagikan ke WA
-            </a>
-          </div>
+          <div className="flex flex-wrap gap-3" />
         </div>
 
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] overflow-hidden">
@@ -485,7 +436,7 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
             </div>
             <div className="pt-6">
               <a
-                href={waShareUrl}
+                href={`https://wa.me/6285811668557?text=Halo, saya ingin bertanya tentang booking ${bookingId}`}
                 className="inline-flex items-center gap-3 text-[#1a1a1a] font-black hover:text-[#FF9500] transition-colors"
               >
                 <div className="w-10 h-10 bg-green-50 text-[#25D366] rounded-full flex items-center justify-center">

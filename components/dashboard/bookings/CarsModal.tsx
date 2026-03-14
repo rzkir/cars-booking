@@ -63,24 +63,18 @@ export default function CarsModal({ booking, colorName }: CarsModalProps) {
 
         <div className="space-y-3 text-sm">
           <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground">ID</span>
-            <span className="font-mono text-xs">
-              {booking.cars?.id ?? booking.car_id ?? "-"}
-            </span>
-          </div>
-          <div className="flex justify-between gap-4">
             <span className="text-muted-foreground">Nama</span>
             <span className="font-medium">{booking.cars?.name ?? "-"}</span>
           </div>
           <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground">Slug</span>
-            <span className="font-mono text-xs">
-              {booking.cars?.slug ?? "-"}
-            </span>
-          </div>
-          <div className="flex justify-between gap-4">
             <span className="text-muted-foreground">Warna</span>
             <span className="font-medium">{colorName}</span>
+          </div>
+          <div className="flex flex-col gap-1 pt-2">
+            <span className="text-muted-foreground">Notes</span>
+            <span className="whitespace-pre-wrap text-sm text-foreground">
+              {booking.notes?.trim() ? booking.notes : "-"}
+            </span>
           </div>
         </div>
       </DialogContent>

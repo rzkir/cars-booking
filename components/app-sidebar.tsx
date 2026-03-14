@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+
 import {
   Command,
   Frame,
@@ -12,13 +13,19 @@ import {
   Car,
   MessageSquare,
   Calendar,
+  CreditCard,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
+
 import { NavProjects } from "@/components/nav-projects";
+
 import { NavSecondary } from "@/components/nav-secondary";
+
 import { NavUser } from "@/components/nav-user";
+
 import Link from "next/link";
+
 import {
   Sidebar,
   SidebarContent,
@@ -95,6 +102,29 @@ const data = {
         {
           title: "All Bookings",
           url: "/dashboard/bookings",
+        },
+        {
+          title: "My Bookings",
+          url: "/dashboard/bookings/my-bookings",
+        },
+        {
+          title: "Billing",
+          url: "#",
+        },
+        {
+          title: "Limits",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Payments",
+      url: "/dashboard/payments",
+      icon: CreditCard,
+      items: [
+        {
+          title: "All Payments",
+          url: "/dashboard/payments",
         },
         {
           title: "My Bookings",

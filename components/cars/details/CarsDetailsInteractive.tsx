@@ -12,6 +12,8 @@ import { accountKeys, getProfile } from "@/services/accounts.service";
 
 import { useCreateBookingMutation } from "@/services/bookings.service";
 
+import { getCustomerBookingCreatedMessage } from "@/hooks/template-message";
+
 import {
   HoverCard,
   HoverCardContent,
@@ -183,22 +185,16 @@ export default function CarsDetailsInteractive({ car }: { car: CarDetails }) {
       .then((data) => {
         setIsModalOpen(false);
         if (customerPhone) {
-          const messageLines = [
-            `Halo ${
-              (fullName ?? defaultFullName ?? "").trim() || "Customer"
-            }, terima kasih sudah melakukan pemesanan di Space Digitalia Rent Car 🚗`,
-            "",
-            `Detail Booking:`,
-            `• Mobil: ${car.name}`,
-            `• Tipe: ${selectedTypeLabel}`,
-            `• Tanggal: ${startDate} s/d ${endDate}`,
-            `• Total estimasi: ${formattedTotalEstimate.replace(",00", "")}`,
-            `• Catatan: ${notes?.trim() || "-"}`,
-            "",
-            `Tim admin kami akan menghubungi Anda untuk konfirmasi lebih lanjut.`,
-            `Lacak status booking: ${window.location.origin}/lacak-pemesanan/${data.id}`,
-          ];
-          const text = messageLines.join("\n");
+          const text = getCustomerBookingCreatedMessage({
+            fullName: (fullName ?? defaultFullName ?? "").trim() || "Customer",
+            carName: car.name,
+            selectedTypeLabel,
+            startDate,
+            endDate,
+            formattedTotalEstimate,
+            notes: notes?.trim() || "-",
+            trackingUrl: `${window.location.origin}/lacak-pemesanan/${data.id}`,
+          });
 
           // Kirim WhatsApp ke customer (non-blocking, abaikan error di UI)
           void fetch("/api/whatsapp/send", {

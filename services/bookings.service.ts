@@ -11,52 +11,16 @@ import { toast } from "sonner";
 
 import { API_CONFIG, getCarsApiHeaders } from "@/hooks/config";
 
+import {
+  getBookingCompletedMessage,
+  getBookingConfirmedMessage,
+} from "@/hooks/template-message";
+
 async function sendBookingConfirmedWhatsApp(booking: BookingWithRelations) {
   const phone = booking.customer_profiles?.phone;
   if (!phone) return;
 
-  const carName = booking.cars?.name ?? "mobil";
-  const customerName = booking.customer_profiles?.full_name;
-  const greeting = customerName ? `Halo ${customerName},` : "Halo,";
-  const paymentUrl =
-    typeof window !== "undefined"
-      ? new URL(`/booking/${booking.id}`, window.location.origin).toString()
-      : `/booking/${booking.id}`;
-
-  const text = `${greeting}
-Booking kamu telah *DIKONFIRMASI* ✅
-
-📄 Rincian Booking
-- ID Booking   : ${booking.id}
-- Status       : ${booking.status}
-- Tipe Rental  : ${booking.rental_type?.replace("_", " ")}
-
-🚗 Mobil
-- Nama         : ${carName}
-- Warna        : ${
-    booking.colors?.name ??
-    (booking.color_id ? booking.color_id : "Tidak ada informasi warna")
-  }
-
-📅 Periode
-- Mulai        : ${booking.start_date}
-- Selesai      : ${booking.end_date}${
-    booking.total_days
-      ? `
-- Total Hari   : ${booking.total_days} hari`
-      : ""
-  }
-
-💰 Pembayaran
-- Total Harga  : Rp ${booking.total_price.toLocaleString("id-ID")}
-
-Silakan selesaikan pembayaran di tautan berikut:
-${paymentUrl}
-
-📝 Catatan
-${booking.notes?.trim() ? booking.notes : "-"} 
-
-Terima kasih telah menggunakan layanan kami 🚗`;
+  const text = getBookingConfirmedMessage(booking);
 
   try {
     await fetch("/api/whatsapp/send", {
@@ -66,6 +30,23 @@ Terima kasih telah menggunakan layanan kami 🚗`;
     });
   } catch (error) {
     console.error("Gagal mengirim WhatsApp konfirmasi booking:", error);
+  }
+}
+
+async function sendBookingCompletedWhatsApp(booking: BookingWithRelations) {
+  const phone = booking.customer_profiles?.phone;
+  if (!phone) return;
+
+  const text = getBookingCompletedMessage(booking);
+
+  try {
+    await fetch("/api/whatsapp/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: phone, text }),
+    });
+  } catch (error) {
+    console.error("Gagal mengirim WhatsApp selesai booking:", error);
   }
 }
 
@@ -213,6 +194,8 @@ export function useUpdateBookingMutation(
     onSuccess: (data, variables) => {
       if (variables?.input?.status === "confirmed") {
         void sendBookingConfirmedWhatsApp(data);
+      } else if (variables?.input?.status === "done") {
+        void sendBookingCompletedWhatsApp(data);
       }
       queryClient.invalidateQueries({ queryKey: bookingsKeys.all });
       queryClient.invalidateQueries({ queryKey: bookingsKeys.detail(data.id) });

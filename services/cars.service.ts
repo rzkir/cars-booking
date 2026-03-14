@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import { useRouter, usePathname } from "next/navigation";
 
@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 
 import { API_CONFIG, getCarsApiHeaders } from "@/hooks/config";
+import { useBookingsQuery, useUpdateBookingMutation } from "@/services/bookings.service";
 
 export function getPaginationRange(
   current: number,
@@ -657,6 +658,80 @@ export function useCarsListState() {
     isLoading,
     deleteMutation,
     handleConfirmDelete,
+  };
+}
+
+// ========== DASHBOARD BOOKINGS STATE (untuk halaman dashboard bookings) ==========
+
+export function useDashboardBookingsState() {
+  const { data, isLoading, isError, error } = useBookingsQuery();
+  const updateBookingMutation = useUpdateBookingMutation();
+  const { data: colorsData } = useColorsQuery();
+
+  const bookings = useMemo(() => data?.data ?? [], [data]);
+
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [rentalTypeFilter, setRentalTypeFilter] = useState<string>("all");
+
+  const colorsById = useMemo(
+    () => new Map((colorsData ?? []).map((c) => [c.id, c])),
+    [colorsData],
+  );
+
+  const rentalTypeOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(bookings.map((booking) => booking.rental_type).filter(Boolean)),
+      ),
+    [bookings],
+  );
+
+  const filteredBookings = useMemo(() => {
+    const term = search.toLowerCase().trim();
+
+    return bookings.filter((booking: BookingWithRelations) => {
+      if (statusFilter !== "all" && booking.status !== statusFilter) {
+        return false;
+      }
+
+      if (
+        rentalTypeFilter !== "all" &&
+        booking.rental_type !== rentalTypeFilter
+      ) {
+        return false;
+      }
+
+      if (!term) return true;
+
+      const customerName = booking.customer_profiles?.full_name ?? "";
+      const customerPhone = booking.customer_profiles?.phone ?? "";
+      const carName = booking.cars?.name ?? "";
+      const colorName =
+        booking.colors?.name ??
+        (booking.color_id ? colorsById.get(booking.color_id)?.name ?? "" : "");
+
+      const combined = `${customerName} ${customerPhone} ${carName} ${colorName}`.toLowerCase();
+
+      return combined.includes(term);
+    });
+  }, [bookings, colorsById, rentalTypeFilter, search, statusFilter]);
+
+  return {
+    bookings,
+    filteredBookings,
+    colorsById,
+    rentalTypeOptions,
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    rentalTypeFilter,
+    setRentalTypeFilter,
+    isLoading,
+    isError,
+    error,
+    updateBookingMutation,
   };
 }
 

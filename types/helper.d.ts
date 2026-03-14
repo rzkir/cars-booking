@@ -211,3 +211,24 @@ interface AccountStoreState {
   setDeletingLocationId: (v: string | null) => void;
   resetAddLocationForm: () => void;
 }
+
+//==================================== WhatsApp Template Message ====================================//
+type WhatsAppBookingContext = BookingWithRelations;
+
+type WhatsAppPaymentContext = {
+  payment: PaymentWithBooking;
+  booking: BookingWithRelations | null;
+  bookingId: string;
+  trackingUrl: string;
+};
+
+type CustomerBookingCreatedContext = {
+  fullName: string | null;
+  carName: string;
+  selectedTypeLabel: string;
+  startDate: string;
+  endDate: string;
+  formattedTotalEstimate: string;
+  notes: string | null;
+  trackingUrl: string;
+};
