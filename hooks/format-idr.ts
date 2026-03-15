@@ -15,3 +15,19 @@ export function formatIdrInput(value: string | number): string {
   if (str === "") return "";
   return `Rp ${Number(str).toLocaleString("id-ID")}`;
 }
+
+export function formatRupiah(n: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
+export function formatDate(s: string) {
+  return new Date(s).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}

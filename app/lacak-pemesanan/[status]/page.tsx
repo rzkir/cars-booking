@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import LacakPemesananDetail from "@/components/lacak-pemesanan/LacakPemesananDetail";
+import LacakPemesananDetail from "@/components/lacak-pemesanan/details/LacakPemesananDetail";
 
 export const metadata: Metadata = {
   title: "Invoice & Status Booking - Space Digitalia",

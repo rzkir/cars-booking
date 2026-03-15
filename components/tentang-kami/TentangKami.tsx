@@ -20,7 +20,7 @@ const cardShadow =
 export default function Page() {
   return (
     <main className="flex-1">
-      <section className="relative h-[70vh] flex items-center justify-center overflow-hidden bg-[#1a1a1a] pt-20">
+      <section className="relative h-screen md:h-[70vh] flex items-center justify-center overflow-hidden bg-[#1a1a1a] pt-20">
         <div className="absolute inset-0 z-0">
           <Image
             src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1920&q=80"
@@ -50,8 +50,8 @@ export default function Page() {
         </div>
       </section>
 
-      <section className="py-14 md:py-32 bg-white">
-        <div className="container mx-auto px-6">
+      <section className="py-14 xl:py-32 bg-white">
+        <div className="max-w-full-sm xl:container mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="space-y-10">
               <div className="space-y-4">
@@ -105,7 +105,7 @@ export default function Page() {
                 />
               </div>
 
-              <div className="absolute -bottom-10 -left-10 bg-[#FF9500] p-12 rounded-[2rem] text-white shadow-xl hidden md:block">
+              <div className="absolute -bottom-10 -left-5 xl:-left-10 bg-[#FF9500] p-12 rounded-[2rem] text-white shadow-xl hidden md:block">
                 <Award className="w-14 h-14 mb-4" />
                 <p className="text-2xl font-black">#1 Rental</p>
                 <p className="text-sm font-bold uppercase tracking-widest opacity-80">
@@ -117,8 +117,8 @@ export default function Page() {
         </div>
       </section>
 
-      <section className="py-14 md:py-32 bg-white">
-        <div className="container mx-auto px-6">
+      <section className="py-14 xl:py-32 bg-white">
+        <div className="max-w-full-sm xl:container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-24">
             <div
               className={`bg-white p-12 rounded-[2.5rem] ${cardShadow} space-y-6`}
@@ -199,8 +199,8 @@ export default function Page() {
         </div>
       </section>
 
-      <section className="py-14 md:py-32 bg-white">
-        <div className="container mx-auto px-6">
+      <section className="py-14 xl:py-32 bg-white">
+        <div className="max-w-full-sm xl:container mx-auto px-6">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.2em]">
               Armada &amp; Jangkauan
@@ -243,8 +243,8 @@ export default function Page() {
         </div>
       </section>
 
-      <section className="py-14 md:py-32 bg-white">
-        <div className="container mx-auto px-6">
+      <section className="py-14 xl:py-32 bg-white">
+        <div className="max-w-full-sm xl:container mx-auto px-6">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.2em]">
               Dibalik Layar
@@ -302,8 +302,8 @@ export default function Page() {
         </div>
       </section>
 
-      <section className="py-14 md:py-24 bg-white">
-        <div className="container mx-auto px-6 flex flex-col items-center space-y-12">
+      <section className="py-14 xl:py-24 bg-white">
+        <div className="max-w-full-sm xl:container mx-auto px-6 flex flex-col items-center space-y-12">
           <p className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
             Dipercaya Oleh Partner Global
           </p>
@@ -347,7 +347,7 @@ export default function Page() {
         </div>
       </section>
 
-      <section className="py-14 md:py-32 bg-[#1a1a1a] relative overflow-hidden">
+      <section className="py-14 xl:py-32 bg-[#1a1a1a] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FF9500]/10 rounded-full blur-[120px] -mr-64 -mt-64" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-[120px] -ml-64 -mb-64" />
 

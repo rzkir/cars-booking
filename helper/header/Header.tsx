@@ -26,7 +26,7 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white">
-      <nav className="container mx-auto px-4 sm:px-6 h-16 md:h-20 flex items-center justify-between">
+      <nav className="max-w-full-sm xl:container mx-auto px-4 sm:px-6 h-16 xl:h-20 flex items-center justify-between">
         <Link
           href="/"
           className="flex items-center gap-2"
@@ -40,7 +40,7 @@ export default function Header() {
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-10 font-medium text-gray-600">
+        <div className="hidden xl:flex items-center gap-10 font-medium text-gray-600">
           <Link
             href="/"
             id="nav-home"
@@ -118,10 +118,10 @@ export default function Header() {
       </nav>
 
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-black/10 bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/70"
+        className="xl:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-black/10 bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/70"
         aria-label="Navigasi utama"
       >
-        <div className="mx-auto max-w-screen-sm px-2 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-2">
+        <div className="mx-auto max-w-full-sm px-2 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-2">
           <div className="grid grid-cols-5 gap-1">
             <Link
               href="/"

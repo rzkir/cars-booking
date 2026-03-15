@@ -49,7 +49,7 @@ export default function CarsLayout({
     <main className="py-20 bg-[#fcfcfc] min-h-screen flex flex-col">
       {/* Content */}
       <div className="flex-1">
-        <div className="container mx-auto px-6">
+        <div className="max-w-full-sm xl:container mx-auto px-6">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Sidebar Filters */}
             <div className="hidden lg:block">

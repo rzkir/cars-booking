@@ -22,27 +22,17 @@ import data from "@/helper/data/data.json";
 
 import { useBookingQuery } from "@/services/bookings.service";
 
+import LacakPemesananNotFound from "@/components/lacak-pemesanan/details/LacakPemesananNotFound";
+
 const KNOWN_STATUSES = ["pending", "confirmed", "ongoing", "done", "cancelled"];
 
 const DEMO_STATUSES = new Set(KNOWN_STATUSES);
 
-function formatRupiah(n: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatDate(s: string) {
-  return new Date(s).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { formatRupiah, formatDate } from "@/hooks/format-idr";
 
 type Props = { idOrStatus: string };
+
+import { headerBg, pillBg, pillText } from "@/hooks/badge";
 
 export default function LacakPemesananDetail({ idOrStatus }: Props) {
   const isDemoStatus = DEMO_STATUSES.has(idOrStatus);
@@ -61,36 +51,6 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
   const isCancelled = status === "cancelled";
 
   const meta = data.tracking_statuses.find((item) => item.status === status);
-
-  const headerBg = isPending
-    ? "bg-yellow-50 border-yellow-100"
-    : isConfirmed
-      ? "bg-blue-50 border-blue-100"
-      : isOngoing
-        ? "bg-sky-50 border-sky-100"
-        : isCancelled
-          ? "bg-red-50 border-red-100"
-          : "bg-green-50 border-green-100";
-
-  const pillBg = isPending
-    ? "bg-yellow-500"
-    : isConfirmed
-      ? "bg-blue-500"
-      : isOngoing
-        ? "bg-sky-500"
-        : isCancelled
-          ? "bg-red-500"
-          : "bg-green-500";
-
-  const pillText = isPending
-    ? "text-yellow-700"
-    : isConfirmed
-      ? "text-blue-700"
-      : isOngoing
-        ? "text-sky-700"
-        : isCancelled
-          ? "text-red-700"
-          : "text-green-700";
 
   const StatusIcon =
     isPending || isOngoing ? Clock : isCancelled ? AlertCircle : CheckCircle2;
@@ -141,23 +101,7 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
   }
 
   if (!isDemoStatus && (isError || !booking)) {
-    return (
-      <main className="pt-24 md:pt-32 pb-20 px-6 bg-[#fcfcfc] min-h-screen">
-        <div className="max-w-5xl mx-auto text-center py-20">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
-          <h2 className="mt-4 text-xl font-black">Booking tidak ditemukan</h2>
-          <p className="mt-2 text-gray-500">
-            Pastikan ID booking benar atau hubungi admin.
-          </p>
-          <Link
-            href="/lacak-pemesanan"
-            className="mt-6 inline-block px-6 py-3 bg-[#FF9500] text-white font-black rounded-xl"
-          >
-            Coba Lagi
-          </Link>
-        </div>
-      </main>
-    );
+    return <LacakPemesananNotFound />;
   }
 
   const b = booking;
@@ -175,7 +119,7 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
 
   return (
     <main className="pt-24 md:pt-32 pb-20 px-6 bg-[#fcfcfc] min-h-screen">
-      <div className="container mx-auto">
+      <div className="max-w-full-sm xl:container mx-auto">
         <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-8">
           <Link href="/" className="hover:text-[#1a1a1a]">
             Beranda
@@ -200,14 +144,16 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
 
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] overflow-hidden">
           <div
-            className={`${headerBg} border-b p-6 flex items-center justify-center gap-3`}
+            className={`${headerBg} ${headerBg(isPending, isConfirmed, isOngoing, isCancelled)} border-b p-6 flex items-center justify-center gap-3`}
           >
             <div
-              className={`w-8 h-8 rounded-full ${pillBg} text-white flex items-center justify-center shadow-lg shadow-black/5`}
+              className={`w-8 h-8 rounded-full ${pillBg} ${pillBg(isPending, isConfirmed, isOngoing, isCancelled)} text-white flex items-center justify-center shadow-lg shadow-black/5`}
             >
               <StatusIcon className="text-xl" />
             </div>
-            <span className={`${pillText} font-black tracking-tight uppercase`}>
+            <span
+              className={`${pillText} ${pillText(isPending, isConfirmed, isOngoing, isCancelled)} font-black tracking-tight uppercase`}
+            >
               {resolvedMeta.title}
             </span>
           </div>
@@ -220,11 +166,11 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
                     <Car className="w-6 h-6" />
                   </div>
                   <span className="text-2xl font-black tracking-tight">
-                    Space Digitalia Rent Car
+                    {process.env.NEXT_PUBLIC_SITE_NAME}
                   </span>
                 </div>
                 <div className="space-y-1 text-gray-400 text-sm font-medium leading-relaxed">
-                  <p>Space Digitalia</p>
+                  <p>{process.env.NEXT_PUBLIC_SITE_NAME}</p>
                   <p>Layanan sewa mobil terpercaya</p>
                 </div>
               </div>
@@ -415,7 +361,7 @@ export default function LacakPemesananDetail({ idOrStatus }: Props) {
                 <div className="w-6 h-6 rounded-full bg-[#FF9500] text-white shrink-0 flex items-center justify-center font-black">
                   2
                 </div>
-                <p>Siapkan KTP &amp; SIM asli saat pengambilan unit.</p>
+                <p>Siapkan SIM asli saat pengambilan unit.</p>
               </li>
               <li className="flex gap-4">
                 <div className="w-6 h-6 rounded-full bg-[#FF9500] text-white shrink-0 flex items-center justify-center font-black">

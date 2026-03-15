@@ -63,6 +63,11 @@ export default function CarsModal({ booking, colorName }: CarsModalProps) {
 
         <div className="space-y-3 text-sm">
           <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Booking ID</span>
+            <span className="font-medium">{booking.id}</span>
+          </div>
+
+          <div className="flex justify-between gap-4">
             <span className="text-muted-foreground">Nama</span>
             <span className="font-medium">{booking.cars?.name ?? "-"}</span>
           </div>
