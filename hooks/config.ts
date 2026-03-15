@@ -60,6 +60,9 @@ export const API_CONFIG = {
         `${API_BASE_URL}/api/payments/booking/${bookingId}`,
       byId: (id: string) => `${API_BASE_URL}/api/payments/${id}`,
     },
+    whatsappReminderSettings: {
+      me: `${API_BASE_URL}/api/whatsapp-reminder-settings/me`,
+    },
   },
   /** Opsi Lokasi untuk filter pencarian mobil (Quick Search) */
   LOCATION_OPTIONS: [

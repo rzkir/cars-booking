@@ -89,8 +89,8 @@ const data = {
           url: "/dashboard/whatsapp/inbox",
         },
         {
-          title: "Changelog",
-          url: "#",
+          title: "Schedule",
+          url: "/dashboard/whatsapp/schedule",
         },
       ],
     },
