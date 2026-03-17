@@ -1,12 +1,23 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { useRouter } from "next/navigation";
 
 import { toast } from "sonner";
 
 import { API_CONFIG, getCarsApiHeaders } from "@/hooks/config";
 
 import { getPaymentSuccessMessage } from "@/hooks/template-message";
+
+import { useBookingQuery } from "@/services/bookings.service";
+
+import {
+  useLocationsQuery,
+  useProfileQuery,
+} from "@/services/accounts.service";
 
 async function sendPaymentSuccessWhatsApp(
   payment: PaymentWithBooking,
@@ -102,6 +113,12 @@ export const paymentsKeys = {
   byBooking: (bookingId: string) =>
     [...paymentsKeys.all, "booking", bookingId] as const,
   detail: (id: string) => [...paymentsKeys.all, "detail", id] as const,
+};
+
+export type GeoLocationSelection = {
+  address: string;
+  latitude: number;
+  longitude: number;
 };
 
 export interface CreateSnapResponse {
@@ -211,4 +228,138 @@ export function usePaymentQuery(
     queryFn: () => fetchPaymentById(id!),
     enabled: !!id && options?.enabled !== false,
   });
+}
+
+const SNAP_SANDBOX_URL = "https://app.sandbox.midtrans.com/snap/snap.js";
+
+export function useBookingsTransactionState(bookingId: string) {
+  const router = useRouter();
+
+  const [copied, setCopied] = useState(false);
+  const [selectedGeo, setSelectedGeo] = useState<GeoLocationSelection | null>(
+    null,
+  );
+
+  const snapMutation = useCreateSnapMutation(bookingId);
+  const syncMutation = useSyncPaymentMutation(bookingId);
+  const bookingQuery = useBookingQuery(bookingId);
+  const profileQuery = useProfileQuery();
+  const locationsQuery = useLocationsQuery();
+
+  const hasHandledPaid = useRef(false);
+  const hasInitLocation = useRef(false);
+
+  useEffect(() => {
+    if (
+      !snapMutation.data &&
+      !snapMutation.isPending &&
+      !snapMutation.isSuccess
+    ) {
+      snapMutation.mutate();
+    }
+  }, [snapMutation]);
+
+  // Jika status payment sudah "paid", arahkan ke halaman lacak-pemesanan.
+  useEffect(() => {
+    const paymentStatus = syncMutation.data?.status;
+    if (paymentStatus !== "paid" || hasHandledPaid.current) return;
+    hasHandledPaid.current = true;
+
+    const statusPath = `/lacak-pemesanan/${bookingId}?payment=success`;
+    router.push(statusPath);
+  }, [syncMutation.data?.status, bookingId, router]);
+
+  // Ambil lokasi default dari customer_locations untuk dijadikan pilihan awal peta.
+  useEffect(() => {
+    if (hasInitLocation.current) return;
+    if (locationsQuery.isLoading) return;
+
+    const locs = locationsQuery.data ?? [];
+    const defaultLoc = locs.find((l) => l.is_default) ?? locs[0];
+    if (!defaultLoc) {
+      hasInitLocation.current = true;
+      return;
+    }
+
+    queueMicrotask(() => {
+      setSelectedGeo({
+        address: defaultLoc.address,
+        latitude: defaultLoc.latitude,
+        longitude: defaultLoc.longitude,
+      });
+    });
+
+    hasInitLocation.current = true;
+  }, [locationsQuery.data, locationsQuery.isLoading]);
+
+  const handleOpenSnap = () => {
+    const snapData = snapMutation.data;
+    if (!snapData?.token || !snapData?.client_key) return;
+
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[data-midtrans-snap="true"]',
+    );
+
+    const openSnap = () => {
+      (
+        window as Window &
+          typeof globalThis & {
+            snap: {
+              pay: (
+                token: string,
+                options?: {
+                  onSuccess?: (result: unknown) => void;
+                  onPending?: (result: unknown) => void;
+                  onError?: (result: unknown) => void;
+                  onClose?: () => void;
+                },
+              ) => void;
+            };
+          }
+      ).snap?.pay(snapData.token, {
+        onSuccess: () => {
+          if (snapData.payment_id) {
+            syncMutation.mutate(snapData.payment_id);
+          }
+        },
+      });
+    };
+
+    if (!existingScript) {
+      const script = document.createElement("script");
+      script.src = SNAP_SANDBOX_URL;
+      script.setAttribute("data-client-key", snapData.client_key);
+      script.setAttribute("data-midtrans-snap", "true");
+      script.onload = openSnap;
+      document.body.appendChild(script);
+    } else {
+      if (!existingScript.getAttribute("data-client-key")) {
+        existingScript.setAttribute("data-client-key", snapData.client_key);
+      }
+      openSnap();
+    }
+  };
+
+  const handleCopyId = async () => {
+    try {
+      await navigator.clipboard.writeText(bookingId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  return {
+    copied,
+    selectedGeo,
+    setSelectedGeo,
+    handleCopyId,
+    handleOpenSnap,
+    snapMutation,
+    syncMutation,
+    bookingQuery,
+    profileQuery,
+    locationsQuery,
+  };
 }

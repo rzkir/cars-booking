@@ -49,6 +49,8 @@ interface LocationPickerProps {
   height?: string;
   /** Optional: show search bar label */
   searchLabel?: string;
+  /** Optional marker position [lat, lng] */
+  marker?: [number, number];
 }
 
 interface GeoSearchHandlerProps {

@@ -1,25 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-
-import { useRouter } from "next/navigation";
-
 import Image from "next/image";
+
+import dynamic from "next/dynamic";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { Input } from "@/components/ui/input";
 
-import {
-  useCreateSnapMutation,
-  useSyncPaymentMutation,
-} from "@/services/payments.service";
-
-import { useBookingQuery } from "@/services/bookings.service";
-
-import { useLocationsQuery } from "@/services/accounts.service";
+import { useBookingsTransactionState } from "@/services/payments.service";
 
 import { ArrowRight, Car, MapPin, Star } from "lucide-react";
+
+const LocationPicker = dynamic(
+  () => import("@/components/profile/LocationPicker"),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-80 w-full rounded-2xl" />,
+  },
+);
 
 type BookingsTransactiontProps = {
   bookingId: string;
@@ -28,29 +27,18 @@ type BookingsTransactiontProps = {
 export default function BookingsTransactiont({
   bookingId,
 }: BookingsTransactiontProps) {
-  const router = useRouter();
-  const [copied, setCopied] = useState(false);
-  const snapMutation = useCreateSnapMutation(bookingId);
-  const syncMutation = useSyncPaymentMutation(bookingId);
-  const bookingQuery = useBookingQuery(bookingId);
-  const locationsQuery = useLocationsQuery();
-  const hasHandledPaid = useRef(false);
-
-  useEffect(() => {
-    if (
-      !snapMutation.data &&
-      !snapMutation.isPending &&
-      !snapMutation.isSuccess
-    ) {
-      snapMutation.mutate();
-    }
-  }, [snapMutation]);
-
-  // Setelah dapat payment_id, sync status dari Midtrans (agar status paid tampil tanpa tunggu webhook)
-  useEffect(() => {
-    // Jangan auto-sync setelah create snap karena transaksi Midtrans bisa belum ada
-    // (bisa memicu 404/502). Sync dilakukan setelah pembayaran berhasil atau manual.
-  }, [snapMutation.data?.payment_id, syncMutation]);
+  const {
+    copied,
+    selectedGeo,
+    setSelectedGeo,
+    handleCopyId,
+    handleOpenSnap,
+    snapMutation,
+    syncMutation,
+    bookingQuery,
+    profileQuery,
+    locationsQuery,
+  } = useBookingsTransactionState(bookingId);
 
   const isLoading = snapMutation.isPending;
   const snapData = snapMutation.data;
@@ -59,6 +47,7 @@ export default function BookingsTransactiont({
   const isSyncing = syncMutation.isPending;
   const booking = bookingQuery.data ?? null;
   const customer = booking?.customer_profiles ?? null;
+  const idNumber = customer?.id_number ?? profileQuery.data?.id_number ?? "";
   const isSyncError = syncMutation.isError;
 
   const formatIDR = (value: number | null | undefined) =>
@@ -70,77 +59,8 @@ export default function BookingsTransactiont({
         }).format(value)
       : "-";
 
-  // Jika status payment sudah "paid", arahkan ke halaman lacak-pemesanan.
-  // Notifikasi WhatsApp akan ditangani oleh bot yang sudah ada di backend.
-  useEffect(() => {
-    if (paymentStatus !== "paid" || hasHandledPaid.current) return;
-    hasHandledPaid.current = true;
-
-    const statusPath = `/lacak-pemesanan/${bookingId}?payment=success`;
-    router.push(statusPath);
-  }, [paymentStatus, bookingId, router]);
-
-  const handleOpenSnap = () => {
-    if (!snapData?.token || !snapData?.client_key) return;
-
-    const SNAP_SANDBOX_URL = "https://app.sandbox.midtrans.com/snap/snap.js";
-    const existingScript = document.querySelector<HTMLScriptElement>(
-      'script[data-midtrans-snap="true"]',
-    );
-
-    const openSnap = () => {
-      (
-        window as Window &
-          typeof globalThis & {
-            snap: {
-              pay: (
-                token: string,
-                options?: {
-                  onSuccess?: (result: unknown) => void;
-                  onPending?: (result: unknown) => void;
-                  onError?: (result: unknown) => void;
-                  onClose?: () => void;
-                },
-              ) => void;
-            };
-          }
-      ).snap?.pay(snapData.token, {
-        onSuccess: () => {
-          // Setelah user menyelesaikan pembayaran di Snap, sync status ke backend
-          if (snapData.payment_id) {
-            syncMutation.mutate(snapData.payment_id);
-          }
-        },
-      });
-    };
-
-    if (!existingScript) {
-      const script = document.createElement("script");
-      script.src = SNAP_SANDBOX_URL;
-      script.setAttribute("data-client-key", snapData.client_key);
-      script.setAttribute("data-midtrans-snap", "true");
-      script.onload = openSnap;
-      document.body.appendChild(script);
-    } else {
-      if (!existingScript.getAttribute("data-client-key")) {
-        existingScript.setAttribute("data-client-key", snapData.client_key);
-      }
-      openSnap();
-    }
-  };
-
-  const handleCopyId = async () => {
-    try {
-      await navigator.clipboard.writeText(bookingId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // ignore
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pt-28">
+    <div className="min-h-screen text-slate-900 pt-20 md:pt-28 pb-10">
       <main className="max-w-full-sm xl:container mx-auto px-6 flex flex-col gap-8 lg:flex-row lg:items-start">
         <div className="w-full space-y-8 lg:w-[60%]">
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -168,10 +88,10 @@ export default function BookingsTransactiont({
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium text-slate-700">
-                  Nomor KTP / Passport
+                  Nomor KTP / SIM
                 </label>
                 <Input
-                  value={customer?.id_number ?? ""}
+                  value={idNumber}
                   readOnly
                   placeholder={
                     bookingQuery.isLoading ? "Memuat..." : "Belum tersedia"
@@ -264,9 +184,52 @@ export default function BookingsTransactiont({
                         </p>
                       </div>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedGeo({
+                          address: loc.address,
+                          latitude: loc.latitude,
+                          longitude: loc.longitude,
+                        })
+                      }
+                      className="shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                    >
+                      Pilih
+                    </button>
                   </div>
                 ))
               )}
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 p-6">
+              <h2 className="font-bold tracking-tight text-slate-900">
+                Cari Lokasi (Leaflet GeoSearch)
+              </h2>
+              <p className="text-sm text-slate-500">
+                Gunakan kolom pencarian di peta untuk memilih alamat.
+              </p>
+            </div>
+
+            <div className="space-y-4 p-6">
+              <LocationPicker
+                height="320px"
+                center={[
+                  selectedGeo?.latitude ?? -6.2088,
+                  selectedGeo?.longitude ?? 106.8456,
+                ]}
+                marker={
+                  selectedGeo
+                    ? [selectedGeo.latitude, selectedGeo.longitude]
+                    : undefined
+                }
+                zoom={12}
+                searchLabel="Alamat Anda..."
+                onSelect={(loc) => setSelectedGeo(loc)}
+              />
             </div>
           </section>
         </div>
@@ -452,7 +415,7 @@ export default function BookingsTransactiont({
                     <button
                       type="button"
                       className="rounded-xl border border-white/15 bg-transparent px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/5"
-                      onClick={() => router.refresh()}
+                      onClick={() => window.location.reload()}
                     >
                       Refresh
                     </button>

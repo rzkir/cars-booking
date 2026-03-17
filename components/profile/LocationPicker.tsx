@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 
 import L from "leaflet";
 
@@ -84,12 +84,30 @@ function GeoSearchHandler({ onSelect, searchLabel }: GeoSearchHandlerProps) {
   return null;
 }
 
+function RecenterMap({
+  center,
+  zoom,
+}: {
+  center: [number, number];
+  zoom?: number;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!center?.length) return;
+    map.setView(center, zoom ?? map.getZoom(), { animate: true });
+  }, [map, center, zoom]);
+
+  return null;
+}
+
 export default function LocationPicker({
   center = [-6.2088, 106.8456],
   zoom = 12,
   onSelect,
   height = "320px",
   searchLabel,
+  marker,
 }: LocationPickerProps) {
   return (
     <div
@@ -107,6 +125,8 @@ export default function LocationPicker({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <GeoSearchHandler onSelect={onSelect} searchLabel={searchLabel} />
+        <RecenterMap center={center} zoom={zoom} />
+        {marker ? <Marker position={marker} /> : null}
       </MapContainer>
     </div>
   );
