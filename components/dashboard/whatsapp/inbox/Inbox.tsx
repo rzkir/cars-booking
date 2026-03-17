@@ -46,14 +46,14 @@ export default function Inbox() {
   const chats = data?.items ?? [];
 
   return (
-    <div className="flex h-[calc(100vh-80px)] flex-col bg-[#F0F2F5] overflow-hidden rounded-3xl">
+    <div className="flex h-[calc(100vh-80px)] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
       {/* Header di dalam card/dashboard */}
-      <header className="border-b border-gray-200 px-6 md:px-8 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shadow-sm">
+      <header className="border-b border-border px-6 md:px-8 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Inbox
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Monitor and manage all incoming customer conversations.
           </p>
         </div>
@@ -64,27 +64,27 @@ export default function Inbox() {
       </header>
 
       {/* Konten */}
-      <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full p-4 md:p-8 space-y-6">
+      <main className="flex-1 flex flex-col w-full p-4 md:p-8 space-y-6">
         {/* Search & filter */}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="relative w-full md:w-96">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">
               🔍
             </span>
             <input
               type="text"
               placeholder="Search contacts or messages..."
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#008069]/20 focus:border-[#008069] transition-all shadow-sm text-sm"
+              className="w-full pl-12 pr-4 py-3 bg-card border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm text-sm"
             />
           </div>
-          <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-gray-200 shadow-sm overflow-x-auto w-full md:w-auto text-sm">
+          <div className="flex items-center gap-2 bg-card p-1.5 rounded-2xl border border-border shadow-sm overflow-x-auto w-full md:w-auto text-sm">
             <button className="px-5 py-2 rounded-xl bg-[#008069] text-white font-bold whitespace-nowrap shadow-md shadow-[#008069]/20 transition-all">
               All Chats
             </button>
-            <button className="px-5 py-2 rounded-xl text-gray-500 hover:bg-gray-50 font-medium whitespace-nowrap">
+            <button className="px-5 py-2 rounded-xl text-muted-foreground hover:bg-muted font-medium whitespace-nowrap">
               Unread
             </button>
-            <button className="px-5 py-2 rounded-xl text-gray-500 hover:bg-gray-50 font-medium whitespace-nowrap">
+            <button className="px-5 py-2 rounded-xl text-muted-foreground hover:bg-muted font-medium whitespace-nowrap">
               Archived
             </button>
           </div>
@@ -93,19 +93,19 @@ export default function Inbox() {
         {/* List chats */}
         <div className="flex-1 overflow-y-auto pr-2">
           {isLoading ? (
-            <div className="flex h-40 items-center justify-center text-sm text-gray-500">
+            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
               Loading inbox...
             </div>
           ) : data?.error ? (
-            <div className="rounded-2xl border border-red-100 bg-white px-4 py-3 text-sm text-red-600">
+            <div className="rounded-2xl border border-red-100 bg-card px-4 py-3 text-sm text-destructive">
               {data.error}
             </div>
           ) : chats.length === 0 ? (
-            <div className="flex h-40 flex-col items-center justify-center text-center text-sm text-gray-500">
-              <p className="font-semibold text-gray-700">
+            <div className="flex h-40 flex-col items-center justify-center text-center text-sm text-muted-foreground">
+              <p className="font-semibold text-foreground">
                 Belum ada percakapan masuk
               </p>
-              <p className="mt-1 text-gray-500">
+              <p className="mt-1 text-muted-foreground">
                 Pesan yang masuk ke nomor WhatsApp Anda akan tampil di sini.
               </p>
             </div>
@@ -122,7 +122,7 @@ export default function Inbox() {
                   <Link
                     key={chat.jid}
                     href={`/dashboard/whatsapp/inbox/${encodeURIComponent(chat.jid)}`}
-                    className="w-full bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-blue-50 hover:shadow-md transition-all duration-200 relative text-left"
+                    className="w-full bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-4 cursor-pointer hover:bg-muted hover:shadow-md transition-all duration-200 relative text-left"
                   >
                     <div className="relative shrink-0">
                       <div className="w-14 h-14 bg-[#008069]/10 rounded-full flex items-center justify-center text-[#008069] font-bold text-sm">
@@ -136,7 +136,7 @@ export default function Inbox() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-0.5">
-                        <h4 className="font-bold text-gray-900 truncate">
+                        <h4 className="font-bold text-foreground truncate">
                           {displayName}
                         </h4>
                         <span className="text-xs font-bold text-[#008069]">
@@ -146,7 +146,7 @@ export default function Inbox() {
                       <div className="flex justify-between items-center gap-2">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           {chat.lastMessageImageUrl && (
-                            <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                            <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-border bg-muted">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={chat.lastMessageImageUrl}
@@ -155,12 +155,12 @@ export default function Inbox() {
                               />
                             </div>
                           )}
-                          <p className="text-sm text-gray-700 truncate pr-4 font-medium flex-1 min-w-0">
+                          <p className="text-sm text-foreground truncate pr-4 font-medium flex-1 min-w-0">
                             {chat.lastMessage || ""}
                           </p>
                         </div>
                         {chat.unreadCount > 0 && (
-                          <span className="w-6 h-6 bg-[#25D366] text-white text-[11px] font-extrabold rounded-full flex items-center justify-center shadow-lg shadow-[#25D366]/40 ring-2 ring-white">
+                          <span className="w-6 h-6 bg-primary text-primary-foreground text-[11px] font-extrabold rounded-full flex items-center justify-center shadow-lg shadow-primary/40 ring-2 ring-background">
                             {chat.unreadCount}
                           </span>
                         )}

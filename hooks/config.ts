@@ -2,6 +2,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const API_SECRET = process.env.NEXT_PUBLIC_API_SECRET;
 
+const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
 export const API_CONFIG = {
   ENDPOINTS: {
     base: API_BASE_URL,
@@ -62,6 +64,10 @@ export const API_CONFIG = {
     },
     whatsappReminderSettings: {
       me: `${API_BASE_URL}/api/whatsapp-reminder-settings/me`,
+    },
+    whatsappBot: {
+      schedule: `${API_URL}/api/whatsapp/schedule`,
+      reminderSettings: `${API_URL}/api/whatsapp/reminder-settings`,
     },
   },
   /** Opsi Lokasi untuk filter pencarian mobil (Quick Search) */
