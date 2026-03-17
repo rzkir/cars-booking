@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import { useQuery } from "@tanstack/react-query";
 
 const fetchInbox = async (): Promise<InboxResponse> => {

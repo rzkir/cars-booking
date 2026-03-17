@@ -30,6 +30,7 @@ interface BookingWithRelations extends Booking {
     full_name: string;
     phone: string;
     email: string | null;
+    id_number: string | null;
     is_verified: boolean;
   } | null;
   cars?: {
