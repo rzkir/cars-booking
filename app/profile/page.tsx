@@ -1,10 +1,21 @@
 import Link from "next/link";
 
-import { ChevronRight, Copy, Heart, LogOut, User } from "lucide-react";
+import { cookies } from "next/headers";
+
+import { ChevronRight, Heart, LogOut, MessageCircle, User } from "lucide-react";
 
 import { CarCard } from "@/components/ui/cars/card";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
 import { getSession } from "@/hooks/get-session";
+
+import { API_CONFIG, getCarsApiHeaders } from "@/hooks/config";
 
 const cardShadow =
   "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100";
@@ -34,8 +45,140 @@ const favoriteCars = [
   },
 ];
 
+const faqs = [
+  {
+    id: "booking-id",
+    question: "Dimana saya bisa menemukan ID Booking?",
+    answer:
+      "ID Booking dikirimkan melalui email dan WhatsApp sesaat setelah Anda mengajukan penyewaan.",
+  },
+  {
+    id: "status-update",
+    question: "Berapa lama status booking diperbarui?",
+    answer:
+      "Status booking diperbarui real-time setiap kali ada perubahan dari admin atau sistem pembayaran.",
+  },
+  {
+    id: "booking-not-found",
+    question: "ID Booking saya tidak ditemukan, apa yang harus dilakukan?",
+    answer:
+      "Pastikan Anda memasukkan kode dengan benar (termasuk tanda hubung). Jika masih tidak ditemukan, hubungi admin melalui WhatsApp.",
+  },
+  {
+    id: "update-data",
+    question: "Bagaimana cara memperbarui data profil atau alamat?",
+    answer:
+      "Silakan gunakan menu pengaturan di halaman profil untuk memperbarui data dan pilih alamat default yang sesuai kebutuhan Anda.",
+  },
+];
+
+function getWhatsAppNumber(phone?: string | null): string {
+  const raw = String(phone ?? "").trim();
+  if (!raw) return "";
+
+  const noPlus = raw.replace(/^\+/, "");
+  if (noPlus.startsWith("62")) return noPlus.slice(2);
+  if (noPlus.startsWith("0")) return noPlus.slice(1);
+
+  return noPlus;
+}
+
+function getIdTypeLabel(idType?: string | null): string {
+  switch ((idType ?? "").toLowerCase()) {
+    case "ktp":
+      return "Kartu Tanda Penduduk (KTP)";
+    case "passport":
+      return "Passport";
+    case "sim_a":
+      return "SIM A";
+    default:
+      return "-";
+  }
+}
+
+function toDateInputValue(dateStr?: string | null): string {
+  const raw = String(dateStr ?? "").trim();
+  if (!raw) return "";
+
+  // Expected DB format: `YYYY-MM-DD`, but we guard against ISO/other strings.
+  const isoMatch = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  return isoMatch?.[1] ?? "";
+}
+
+async function getCustomerProfile(): Promise<CustomerProfile | null> {
+  const apiUrl = API_CONFIG.ENDPOINTS.customerProfiles.me;
+  if (!apiUrl?.trim()) return null;
+
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  if (!cookieHeader) return null;
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        cookie: cookieHeader,
+        "Content-Type": "application/json",
+        ...getCarsApiHeaders(),
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) return null;
+    return (await res.json()) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function getCustomerLocations(): Promise<CustomerLocation[]> {
+  const apiUrl = API_CONFIG.ENDPOINTS.customerLocations.base;
+  if (!apiUrl?.trim()) return [];
+
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  if (!cookieHeader) return [];
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        cookie: cookieHeader,
+        "Content-Type": "application/json",
+        ...getCarsApiHeaders(),
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) return [];
+
+    const json = (await res.json()) as { data?: CustomerLocation[] };
+    return json?.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function Page() {
-  const user = (await getSession())!;
+  const user = await getSession();
+  if (!user) {
+    return (
+      <div className="p-8 text-gray-500">Silakan login terlebih dahulu.</div>
+    );
+  }
+
+  const profile = await getCustomerProfile();
+  const locations = await getCustomerLocations();
+  const defaultLocation = locations.find((l) => l.is_default) ?? locations[0];
+
+  const whatsappNumber = getWhatsAppNumber(profile?.phone);
+  const idTypeLabel = getIdTypeLabel(profile?.id_type);
+  const genderLabel =
+    profile?.gender === "male"
+      ? "Laki-laki"
+      : profile?.gender === "female"
+        ? "Perempuan"
+        : "-";
 
   return (
     <div>
@@ -54,7 +197,7 @@ export default async function Page() {
                   Nama Lengkap
                 </label>
                 <span className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all">
-                  {user.name}
+                  {profile?.full_name ?? "-"}
                 </span>
               </div>
               <div className="flex flex-col space-y-3">
@@ -63,7 +206,7 @@ export default async function Page() {
                 </label>
 
                 <span className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all">
-                  {user.email}
+                  {profile?.email ?? "-"}
                 </span>
               </div>
               <div className="space-y-3">
@@ -75,7 +218,7 @@ export default async function Page() {
                     +62
                   </div>
                   <span className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all">
-                    {user.phone.replace(/^0/, "")}
+                    {whatsappNumber || "-"}
                   </span>
                 </div>
               </div>
@@ -85,83 +228,42 @@ export default async function Page() {
                 </label>
                 <input
                   type="date"
-                  defaultValue="1992-05-14"
-                  className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all"
+                  value={toDateInputValue(profile?.birth_date)}
+                  disabled
+                  className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none font-bold transition-all disabled:opacity-100"
                 />
               </div>
               <div className="space-y-3 md:col-span-2">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
                   Alamat Lengkap
                 </label>
-                <textarea
-                  rows={3}
-                  defaultValue="Jl. Jenderal Sudirman No. 45, Apartemen Senayan City Tower A No. 12, Jakarta Selatan, 12190"
-                  className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all"
-                />
+                <div className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all whitespace-pre-wrap min-h-[84px] flex items-start">
+                  {defaultLocation?.address ?? "-"}
+                </div>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 flex flex-col">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
                   Tipe ID
                 </label>
-                <select className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all appearance-none">
-                  <option>Kartu Tanda Penduduk (KTP)</option>
-                  <option>Passport</option>
-                  <option>SIM A</option>
-                </select>
+                <span className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all">
+                  {idTypeLabel}
+                </span>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 flex flex-col">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
                   Nomor ID
                 </label>
-                <input
-                  type="text"
-                  defaultValue="3174123456780001"
-                  className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all"
-                />
+                <span className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all">
+                  {profile?.id_number ?? "-"}
+                </span>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 flex flex-col">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
                   Jenis Kelamin
                 </label>
-                <div className="flex gap-6 mt-2">
-                  <label className="flex items-center gap-2 cursor-pointer font-bold">
-                    <input
-                      type="radio"
-                      name="gender"
-                      defaultChecked
-                      className="w-5 h-5 accent-[#FF9500]"
-                    />
-                    Laki-laki
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer font-bold">
-                    <input
-                      type="radio"
-                      name="gender"
-                      className="w-5 h-5 accent-[#FF9500]"
-                    />
-                    Perempuan
-                  </label>
-                </div>
-              </div>
-              <div className="md:col-span-2 pt-8 flex gap-4">
-                <button
-                  id="btn-save-profile"
-                  type="submit"
-                  className="px-10 py-5 bg-[#1a1a1a] text-white rounded-2xl font-black text-sm hover:scale-[1.02] active:scale-95 transition-transform shadow-lg shadow-black/10"
-                  style={{
-                    transitionTimingFunction:
-                      "cubic-bezier(0.34, 1.56, 0.64, 1)",
-                  }}
-                >
-                  Simpan Perubahan
-                </button>
-                <button
-                  id="btn-cancel-profile"
-                  type="button"
-                  className="px-10 py-5 bg-white text-gray-400 rounded-2xl font-black text-sm hover:text-gray-600 transition-all border border-gray-100"
-                >
-                  Batalkan
-                </button>
+                <span className="w-full px-6 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 outline-none focus:border-[#FF9500] font-bold transition-all inline-flex justify-start">
+                  {genderLabel}
+                </span>
               </div>
             </form>
           </div>
@@ -192,69 +294,36 @@ export default async function Page() {
 
         {/* Right Column - Sidebar */}
         <div className="lg:col-span-4 space-y-8">
-          {/* DriveEase Loyalty */}
+          {/* WhatsApp CS/Admin */}
           <div className="bg-[#1a1a1a] rounded-[2rem] p-8 text-white relative overflow-hidden">
             <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#FF9500]/20 rounded-full blur-3xl" />
             <div className="relative z-10 space-y-6">
               <div>
                 <h4 className="text-xs font-black text-[#FF9500] uppercase tracking-widest mb-2">
-                  DriveEase Loyalty
+                  WhatsApp CS/Admin
                 </h4>
-                <p className="text-3xl font-black">
-                  2,450{" "}
-                  <span className="text-sm text-gray-400 font-bold uppercase">
-                    Poin
-                  </span>
-                </p>
-              </div>
-              <div className="pt-6 border-t border-white/10">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm font-bold text-gray-400">
-                    Status Membership
-                  </span>
-                  <span className="text-sm font-black text-[#FF9500]">
-                    Gold
-                  </span>
+                <div className="flex items-center gap-3">
+                  <MessageCircle className="w-7 h-7 text-[#FF9500]" />
+                  <h3 className="text-xl font-black">Chat WhatsApp Admin</h3>
                 </div>
-                <div className="w-full h-2 bg-white/10 rounded-full mb-2">
-                  <div className="w-3/4 h-full bg-[#FF9500] rounded-full" />
-                </div>
-                <p className="text-[10px] text-gray-500 font-bold">
-                  Dapatkan 550 poin lagi untuk menjadi Platinum
-                </p>
               </div>
-              <button
-                id="btn-redeem"
-                type="button"
-                className="w-full py-4 bg-white text-[#1a1a1a] rounded-xl font-black text-sm hover:bg-[#FF9500] hover:text-white transition-all"
-              >
-                Tukar Poin Reward
-              </button>
-            </div>
-          </div>
-
-          {/* Kode Referral */}
-          <div className={`bg-white rounded-[2rem] p-8 ${cardShadow}`}>
-            <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">
-              Kode Referral
-            </h4>
-            <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 text-center space-y-4">
-              <p className="text-2xl font-black tracking-widest">
-                DRIVE-RIZKY-99
+              <p className="text-sm text-gray-400 font-medium leading-relaxed">
+                Ketik{" "}
+                <span className="text-white font-bold">
+                  &quot;STATUS [ID BOOKING]&quot;
+                </span>{" "}
+                lalu kirim ke nomor admin kami.
               </p>
-              <button
-                id="btn-copy-ref"
-                type="button"
-                className="inline-flex items-center gap-2 text-xs font-black text-[#FF9500] uppercase tracking-widest hover:underline"
+              <a
+                href={`https://wa.me/${(process.env.NEXT_PUBLIC_WHATSAPP_CS || "6285811668557").replace(/\D/g, "")}`}
+                id="btn-chat-wa-admin"
+                target="_blank"
+                rel="noreferrer"
+                className="block w-full py-4 bg-white text-[#1a1a1a] rounded-xl font-black text-sm hover:bg-[#FF9500] hover:text-white transition-all text-center"
               >
-                <Copy className="w-4 h-4" />
-                Salin Kode
-              </button>
+                Chat Sekarang
+              </a>
             </div>
-            <p className="text-xs text-gray-400 font-medium mt-6 leading-relaxed">
-              Bagikan kode ini ke teman dan dapatkan diskon 15% untuk setiap
-              penyewaan pertama mereka!
-            </p>
           </div>
 
           {/* Bantuan & Dukungan */}
@@ -264,18 +333,35 @@ export default async function Page() {
             <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">
               Bantuan & Dukungan
             </h4>
+
+            <div className="space-y-4">
+              <div>
+                <p className="font-black text-sm text-gray-600">
+                  Pusat Bantuan (FAQ)
+                </p>
+                <p className="text-xs text-gray-400 font-medium leading-relaxed">
+                  Cari jawaban instan untuk masalah Anda
+                </p>
+              </div>
+
+              <Accordion type="single" collapsible className="w-full">
+                {faqs.map((faq) => (
+                  <AccordionItem key={faq.id} value={faq.id}>
+                    <AccordionTrigger className="font-black text-gray-700">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                        {faq.answer}
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+
             <Link
-              href="#"
-              id="link-faq"
-              className="flex items-center justify-between group"
-            >
-              <span className="font-bold text-gray-600 group-hover:text-[#1a1a1a]">
-                Pusat Bantuan
-              </span>
-              <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#FF9500]" />
-            </Link>
-            <Link
-              href="#"
+              href="/syarat-dan-ketentuan"
               id="link-terms"
               className="flex items-center justify-between group"
             >
@@ -285,7 +371,7 @@ export default async function Page() {
               <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#FF9500]" />
             </Link>
             <Link
-              href="#"
+              href="/kebijakan-privasi"
               id="link-privacy"
               className="flex items-center justify-between group"
             >

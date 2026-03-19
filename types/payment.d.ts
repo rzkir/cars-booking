@@ -2,6 +2,10 @@ type PaymentStatus = "unpaid" | "paid" | "failed";
 
 type PaymentMethod = "transfer" | "qris" | "midtrans" | string;
 
+type PaymentStatusFilter = "all" | "paid" | "unpaid" | "failed";
+
+type SortKey = "Terbaru" | "Terakhir";
+
 interface PaymentDetailsJson {
   va_numbers?: {
     bank: string;
@@ -34,4 +38,23 @@ interface PaymentWithBooking extends Payment {
     total_price: number;
     status: string;
   } | null;
+}
+
+type GeoLocationSelection = {
+  address: string;
+  latitude: number;
+  longitude: number;
+};
+
+interface CreateSnapResponse {
+  token: string;
+  redirect_url: string | null;
+  payment_id: string;
+  client_key: string;
+}
+
+interface SyncPaymentResponse {
+  status: "paid" | "unpaid" | "failed";
+  midtrans_status: string | null;
+  payment: PaymentWithBooking | Record<string, unknown>;
 }

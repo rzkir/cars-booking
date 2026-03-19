@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -110,23 +110,11 @@ async function fetcher<T>(
 
 export const paymentsKeys = {
   all: ["payments"] as const,
+  me: ["payments", "me"] as const,
   byBooking: (bookingId: string) =>
     [...paymentsKeys.all, "booking", bookingId] as const,
   detail: (id: string) => [...paymentsKeys.all, "detail", id] as const,
 };
-
-export type GeoLocationSelection = {
-  address: string;
-  latitude: number;
-  longitude: number;
-};
-
-export interface CreateSnapResponse {
-  token: string;
-  redirect_url: string | null;
-  payment_id: string;
-  client_key: string;
-}
 
 async function createSnapToken(bookingId: string): Promise<CreateSnapResponse> {
   return fetcher<CreateSnapResponse>(
@@ -146,12 +134,6 @@ async function fetchPaymentById(id: string): Promise<PaymentWithBooking> {
   return fetcher<PaymentWithBooking>(API_CONFIG.ENDPOINTS.payments.byId(id));
 }
 
-export interface SyncPaymentResponse {
-  status: "paid" | "unpaid" | "failed";
-  midtrans_status: string | null;
-  payment: PaymentWithBooking | Record<string, unknown>;
-}
-
 async function syncPaymentStatus(
   paymentId: string,
 ): Promise<SyncPaymentResponse> {
@@ -164,6 +146,13 @@ async function syncPaymentStatus(
 async function fetchPayments(): Promise<Payment[]> {
   const data = await fetcher<{ data: Payment[] }>(
     `${API_CONFIG.ENDPOINTS.base}/api/payments`,
+  );
+  return Array.isArray(data?.data) ? data.data : [];
+}
+
+async function fetchMyPayments(): Promise<PaymentWithBooking[]> {
+  const data = await fetcher<{ data: PaymentWithBooking[] }>(
+    API_CONFIG.ENDPOINTS.payments.me,
   );
   return Array.isArray(data?.data) ? data.data : [];
 }
@@ -191,6 +180,95 @@ export function usePaymentsQuery() {
     queryKey: paymentsKeys.all,
     queryFn: () => fetchPayments(),
   });
+}
+
+export function useMyPaymentsQuery() {
+  return useQuery({
+    queryKey: paymentsKeys.me,
+    queryFn: () => fetchMyPayments(),
+  });
+}
+
+export const PAYMENT_STATUS_META: Record<
+  Exclude<PaymentStatusFilter, "all">,
+  { label: string; pill: string }
+> = {
+  paid: {
+    label: "Dibayar",
+    pill: "bg-emerald-50 text-emerald-700",
+  },
+  unpaid: {
+    label: "Menunggu",
+    pill: "bg-orange-50 text-orange-700",
+  },
+  failed: {
+    label: "Gagal",
+    pill: "bg-red-50 text-red-700",
+  },
+};
+
+function getPaymentDate(payment: Payment): number {
+  return new Date(payment.paid_at ?? payment.created_at).getTime();
+}
+
+export function useRiwayatTransactionState() {
+  const listQuery = useMyPaymentsQuery();
+  const allPayments = useMemo(() => listQuery.data ?? [], [listQuery.data]);
+
+  const [statusFilter, setStatusFilter] = useState<PaymentStatusFilter>("all");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortKey>("Terbaru");
+
+  const filteredSortedPayments = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    const filtered = allPayments.filter((p) => {
+      const matchesStatus = statusFilter === "all" || p.status === statusFilter;
+      if (!matchesStatus) return false;
+
+      if (!term) return true;
+      const combined = `${p.id} ${p.booking_id}`.toLowerCase();
+      return combined.includes(term);
+    });
+
+    return filtered.sort((a, b) => {
+      const da = getPaymentDate(a);
+      const db = getPaymentDate(b);
+      return sort === "Terbaru" ? db - da : da - db;
+    });
+  }, [allPayments, search, sort, statusFilter]);
+
+  const isLoading = listQuery.isLoading && allPayments.length === 0;
+
+  const totalAmount = useMemo(() => {
+    return filteredSortedPayments.reduce((sum, p) => {
+      const totalPrice =
+        (p as PaymentWithBooking).bookings?.total_price ?? p.amount ?? 0;
+      return sum + (typeof totalPrice === "number" ? totalPrice : 0);
+    }, 0);
+  }, [filteredSortedPayments]);
+
+  const totalCount = filteredSortedPayments.length;
+
+  const statusLabel =
+    statusFilter === "all"
+      ? "Semua status"
+      : PAYMENT_STATUS_META[statusFilter].label;
+
+  return {
+    listQuery,
+    filteredSortedPayments,
+    isLoading,
+    statusFilter,
+    setStatusFilter,
+    search,
+    setSearch,
+    sort,
+    setSort,
+    totalAmount,
+    totalCount,
+    statusLabel,
+  };
 }
 
 export function useCreateSnapMutation(bookingId: string) {

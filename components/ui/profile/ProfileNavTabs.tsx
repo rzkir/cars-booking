@@ -10,6 +10,7 @@ export default function ProfileNavTabs() {
   const tabs = [
     { href: "/profile", label: "Profil" },
     { href: "/profile/riwayat-booking", label: "Riwayat Booking" },
+    { href: "/profile/riwayat-transaksi", label: "Riwayat Transaksi" },
     { href: "/profile/edit-profile", label: "Edit Profil" },
     { href: "/profile/pengaturan", label: "Pengaturan" },
   ];

@@ -60,6 +60,7 @@ export const API_CONFIG = {
       webhook: `${API_BASE_URL}/api/payments/webhook`,
       byBooking: (bookingId: string) =>
         `${API_BASE_URL}/api/payments/booking/${bookingId}`,
+      me: `${API_BASE_URL}/api/payments/me`,
       byId: (id: string) => `${API_BASE_URL}/api/payments/${id}`,
     },
     whatsappReminderSettings: {

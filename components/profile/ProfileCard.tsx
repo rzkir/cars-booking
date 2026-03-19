@@ -1,6 +1,10 @@
+"use client";
+
 import { CheckCircle, MapPin, Pencil } from "lucide-react";
 
 import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
+
+import { useLocationsQuery } from "@/services/accounts.service";
 
 const cardShadow =
   "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100";
@@ -42,6 +46,9 @@ export default function ProfileCard({
   isVerified?: boolean | null;
 }) {
   const membershipLabel = getMembershipLabel(isVerified);
+  const { data: locations, isLoading } = useLocationsQuery();
+  const locationAddress =
+    locations?.[0]?.address ?? (isLoading ? "-" : "Belum ada alamat");
 
   return (
     <section
@@ -67,7 +74,7 @@ export default function ProfileCard({
               </span>
               <span className="text-sm text-gray-400 font-bold flex items-center gap-1">
                 <MapPin className="w-4 h-4 text-[#FF9500]" />
-                Jakarta Selatan, Indonesia
+                {locationAddress}
               </span>
             </div>
           </div>
