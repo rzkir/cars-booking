@@ -13,13 +13,15 @@ import {
 
 import { Separator } from "@/components/ui/separator";
 
-import { ThemeProvider } from "@/context/ThemeProvider";
-
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+
+import { ThemeToggle } from "@/components/theme-toggle";
+
+import { ThemeProvider } from "@/context/ThemeProvider";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
@@ -39,6 +41,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 orientation="vertical"
                 className="mr-2 data-[orientation=vertical]:h-4"
               />
+              <ThemeToggle />
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem className="hidden md:block">

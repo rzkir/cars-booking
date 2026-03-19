@@ -1,22 +1,14 @@
-import { MapPin, Pencil } from "lucide-react";
+import { CheckCircle, MapPin, Pencil } from "lucide-react";
 
 import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
 
 const cardShadow =
   "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100";
 
-function getMembershipLabel(user: Accounts | null): string {
-  if (!user?.created_at) return "Member";
-  const joined = new Date(user.created_at);
-  if (Number.isNaN(joined.getTime())) return "Member";
-
-  const now = new Date();
-  const diffYears =
-    (now.getTime() - joined.getTime()) / (1000 * 60 * 60 * 24 * 365);
-
-  if (diffYears >= 3) return "Platinum Member";
-  if (diffYears >= 1) return "Gold Member";
-  return "Silver Member";
+function getMembershipLabel(isVerified: boolean | null | undefined): string {
+  if (isVerified === true) return "Terverifikasi";
+  if (isVerified === false) return "Belum terverifikasi";
+  return "Member";
 }
 
 function formatJoinedDate(createdAt: string | null | undefined): string {
@@ -43,11 +35,13 @@ function formatJoinedDate(createdAt: string | null | undefined): string {
 export default function ProfileCard({
   user,
   variant = "default",
+  isVerified,
 }: {
   user: Accounts;
   variant?: "default" | "edit";
+  isVerified?: boolean | null;
 }) {
-  const membershipLabel = getMembershipLabel(user);
+  const membershipLabel = getMembershipLabel(isVerified);
 
   return (
     <section
@@ -65,7 +59,10 @@ export default function ProfileCard({
               {user.name || "Pengguna DriveEase"}
             </h1>
             <div className="flex flex-wrap justify-center md:justify-start gap-3 items-center">
-              <span className="px-4 py-1.5 bg-[#1a1a1a] text-[#FF9500] text-[10px] font-black uppercase tracking-widest rounded-full">
+              <span className="px-4 py-1.5 bg-[#1a1a1a] text-[#FF9500] text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1">
+                {isVerified === true && (
+                  <CheckCircle className="w-3 h-3 text-[#FF9500]" />
+                )}
                 {membershipLabel}
               </span>
               <span className="text-sm text-gray-400 font-bold flex items-center gap-1">

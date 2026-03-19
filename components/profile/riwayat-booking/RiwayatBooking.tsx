@@ -3,13 +3,13 @@
 import { useMemo, useState } from "react";
 
 import Image from "next/image";
+
 import Link from "next/link";
 
 import {
   CalendarRange,
   CreditCard,
-  ExternalLink,
-  RefreshCw,
+  Hash,
   Search,
   Settings2,
   Star,
@@ -18,6 +18,30 @@ import {
 import { formatDate, formatRupiah } from "@/hooks/format-idr";
 
 import { useBookingsQuery } from "@/services/bookings.service";
+
+import { Button } from "@/components/ui/button";
+
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+
+import { Input } from "@/components/ui/input";
+
+import { Skeleton } from "@/components/ui/skeleton";
+
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const cardShadow =
   "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-gray-100";
@@ -109,91 +133,104 @@ export default function RiwayatBooking() {
           aria-label="Filter dan pencarian riwayat booking"
           className="flex flex-col lg:flex-row lg:items-center justify-between gap-6"
         >
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-            <button
+          <ScrollArea className="w-full md:w-[50%] rounded-md border whitespace-nowrap">
+            <Button
+              variant="ghost"
               id="filter-all"
               className={[
                 "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
                 statusFilter === "all"
-                  ? "bg-[#1a1a1a] text-white"
-                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500]",
+                  ? "bg-[#1a1a1a] text-white hover:bg-[#1a1a1a] hover:text-white"
+                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500] hover:bg-transparent",
+                "h-auto",
               ].join(" ")}
               type="button"
               onClick={() => setStatusFilter("all")}
             >
               Semua
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               id="filter-done"
               className={[
                 "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
                 statusFilter === "done"
-                  ? "bg-[#1a1a1a] text-white"
-                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500]",
+                  ? "bg-[#1a1a1a] text-white hover:bg-[#1a1a1a] hover:text-white"
+                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500] hover:bg-transparent",
+                "h-auto",
               ].join(" ")}
               type="button"
               onClick={() => setStatusFilter("done")}
             >
               Selesai
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               id="filter-ongoing"
               className={[
                 "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
                 statusFilter === "ongoing"
-                  ? "bg-[#1a1a1a] text-white"
-                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500]",
+                  ? "bg-[#1a1a1a] text-white hover:bg-[#1a1a1a] hover:text-white"
+                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500] hover:bg-transparent",
+                "h-auto",
               ].join(" ")}
               type="button"
               onClick={() => setStatusFilter("ongoing")}
             >
               Berlangsung
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               id="filter-confirmed"
               className={[
                 "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
                 statusFilter === "confirmed"
-                  ? "bg-[#1a1a1a] text-white"
-                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500]",
+                  ? "bg-[#1a1a1a] text-white hover:bg-[#1a1a1a] hover:text-white"
+                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500] hover:bg-transparent",
+                "h-auto",
               ].join(" ")}
               type="button"
               onClick={() => setStatusFilter("confirmed")}
             >
               Dikonfirmasi
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               id="filter-pending"
               className={[
                 "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
                 statusFilter === "pending"
-                  ? "bg-[#1a1a1a] text-white"
-                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500]",
+                  ? "bg-[#1a1a1a] text-white hover:bg-[#1a1a1a] hover:text-white"
+                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500] hover:bg-transparent",
+                "h-auto",
               ].join(" ")}
               type="button"
               onClick={() => setStatusFilter("pending")}
             >
               Menunggu
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               id="filter-cancelled"
               className={[
                 "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
                 statusFilter === "cancelled"
-                  ? "bg-[#1a1a1a] text-white"
-                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500]",
+                  ? "bg-[#1a1a1a] text-white hover:bg-[#1a1a1a] hover:text-white"
+                  : "bg-white text-gray-400 border border-gray-100 hover:border-[#FF9500] hover:text-[#FF9500] hover:bg-transparent",
+                "h-auto",
               ].join(" ")}
               type="button"
               onClick={() => setStatusFilter("cancelled")}
             >
               Dibatalkan
-            </button>
-          </div>
+            </Button>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
 
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4" />
-              <input
+              <Input
                 type="text"
                 placeholder="Cari ID Booking..."
                 className="w-full pl-10 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-bold outline-none focus:border-[#FF9500] transition-all"
@@ -201,47 +238,119 @@ export default function RiwayatBooking() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <select
-              id="sort-booking"
-              className="w-full sm:w-auto px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest outline-none appearance-none"
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-            >
-              <option>Terbaru</option>
-              <option>Terakhir</option>
-              <option>Harga Tertinggi</option>
-              <option>Harga Terendah</option>
-            </select>
+            <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
+              <SelectTrigger
+                id="sort-booking"
+                className="w-full sm:w-auto px-4 py-3 bg-white border border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest outline-none"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Terbaru">Terbaru</SelectItem>
+                <SelectItem value="Terakhir">Terakhir</SelectItem>
+                <SelectItem value="Harga Tertinggi">Harga Tertinggi</SelectItem>
+                <SelectItem value="Harga Terendah">Harga Terendah</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </section>
 
         {/* Booking History List */}
         <section aria-label="Daftar riwayat booking" className="space-y-6">
           {isLoading ? (
-            <div className="bg-white rounded-[2rem] border border-gray-100 p-10 text-center">
-              <p className="text-sm font-bold text-gray-400">
-                Memuat riwayat booking...
-              </p>
+            <div className="space-y-6">
+              {Array.from({ length: 3 }).map((_, idx) => (
+                <article
+                  key={idx}
+                  aria-label="Skeleton riwayat booking"
+                  className={[
+                    `bg-white rounded-[2rem] ${cardShadow} overflow-hidden group`,
+                    "opacity-100",
+                  ].join(" ")}
+                >
+                  <div className="p-6 md:p-8 flex flex-col lg:flex-row gap-8">
+                    <div
+                      className={[
+                        "w-full lg:w-72 h-48 rounded-[1.5rem] overflow-hidden bg-gray-50 shrink-0 relative",
+                      ].join(" ")}
+                    >
+                      <Skeleton className="h-full w-full rounded-[1.5rem] bg-gray-200" />
+                      <div className="absolute top-4 left-4">
+                        <Skeleton className="h-6 w-24 rounded-lg bg-gray-200" />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-between py-2">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <Skeleton className="h-4 w-28 bg-gray-200" />
+                          </div>
+                          <Skeleton className="h-8 w-64 bg-gray-200" />
+                          <div className="mt-3 flex items-center gap-2">
+                            <Skeleton className="h-4 w-4 bg-gray-200" />
+                            <Skeleton className="h-4 w-80 bg-gray-200" />
+                          </div>
+                        </div>
+
+                        <div className="text-left md:text-right">
+                          <Skeleton className="h-4 w-32 bg-gray-200 mx-auto md:mx-0" />
+                          <Skeleton className="mt-3 h-10 w-36 bg-[#FF9500]/20 rounded-md" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-6 border-t border-gray-50">
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-60 bg-gray-200" />
+                          <div className="flex items-start gap-3">
+                            <Skeleton className="h-8 w-8 rounded-lg bg-gray-200" />
+                            <div className="flex flex-col gap-2">
+                              <Skeleton className="h-4 w-64 bg-gray-200" />
+                              <Skeleton className="h-4 w-48 bg-gray-200" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-60 bg-gray-200" />
+                          <Skeleton className="h-20 w-full bg-gray-200 rounded-md" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex lg:flex-col justify-end gap-3 shrink-0 pt-4 lg:pt-0">
+                      <Skeleton className="h-12 w-12 bg-gray-200 rounded-xl" />
+                      <Skeleton className="h-12 w-44 bg-gray-200 rounded-xl" />
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
           ) : listQuery.isError ? (
             <div className="bg-white rounded-[2rem] border border-gray-100 p-10 text-center">
               <p className="text-sm font-bold text-gray-500">
                 Gagal memuat riwayat booking.
               </p>
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 onClick={() => listQuery.refetch()}
-                className="mt-4 px-6 py-3 bg-[#1a1a1a] text-white rounded-xl text-xs font-black uppercase tracking-widest"
+                className="mt-4 h-auto px-6 py-3 bg-[#1a1a1a] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black"
               >
                 Coba lagi
-              </button>
+              </Button>
             </div>
           ) : filteredSortedBookings.length === 0 ? (
-            <div className="bg-white rounded-[2rem] border border-gray-100 p-10 text-center">
-              <p className="text-sm font-bold text-gray-400">
-                Belum ada booking untuk ditampilkan.
-              </p>
-            </div>
+            <Empty className="py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <CalendarRange className="h-6 w-6" />
+                </EmptyMedia>
+                <EmptyTitle>Belum ada booking</EmptyTitle>
+                <EmptyDescription>
+                  Belum ada booking untuk ditampilkan.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             filteredSortedBookings.map((booking) => {
               const statusMeta = STATUS_META[booking.status];
@@ -362,23 +471,25 @@ export default function RiwayatBooking() {
                       </div>
                     </div>
 
-                    <div className="flex lg:flex-col justify-end gap-3 shrink-0 pt-4 lg:pt-0">
+                    <div className="flex flex-col justify-end gap-3 shrink-0">
                       <Link
                         href={`/lacak-pemesanan/${booking.id}`}
-                        className="w-12 h-12 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#1a1a1a] hover:border-[#1a1a1a] transition-all"
+                        className="flex-1 lg:flex-none px-6 py-3 bg-[#1a1a1a] text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2 shadow-xl shadow-black/10"
                         aria-label="Lihat detail booking"
                       >
-                        <ExternalLink className="w-5 h-5" />
+                        <Hash className="w-4 h-4" />
+                        Lacak Pemesanan
                       </Link>
 
                       {booking.status === "done" ? (
-                        <button
+                        <Button
+                          variant="ghost"
                           type="button"
                           className="flex-1 lg:flex-none px-6 py-3 bg-[#FF9500] text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#E68600] transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-100"
                         >
                           <Star className="w-4 h-4" />
                           Beri Review
-                        </button>
+                        </Button>
                       ) : canPay ? (
                         <Link
                           href={`/booking/${booking.id}`}
@@ -388,20 +499,6 @@ export default function RiwayatBooking() {
                           Bayar Sekarang
                         </Link>
                       ) : null}
-
-                      <Link
-                        href={
-                          booking.cars?.slug
-                            ? `/cars/${booking.cars.slug}`
-                            : "/"
-                        }
-                        className="w-12 h-12 bg-[#1a1a1a] text-white rounded-xl flex items-center justify-center hover:bg-black transition-all shadow-xl shadow-black/10"
-                        aria-label={
-                          isCancelled ? "Cek ketersediaan" : "Sewa lagi"
-                        }
-                      >
-                        <RefreshCw className="w-5 h-5" />
-                      </Link>
                     </div>
                   </div>
                 </article>

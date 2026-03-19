@@ -17,7 +17,7 @@ export default function ProfileNavTabs() {
   return (
     <nav
       aria-label="Navigasi profil"
-      className="border-b border-gray-100 mb-12"
+      className="border-b border-gray-100 mb-10"
     >
       <div className="flex gap-10 overflow-x-auto pb-px scrollbar-hide">
         {tabs.map((tab) => {

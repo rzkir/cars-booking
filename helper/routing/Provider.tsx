@@ -18,7 +18,7 @@ export default function Providers({
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider initialSession={initialSession}>
-          <Pathname>{children}</Pathname>
+        <Pathname>{children}</Pathname>
       </AuthProvider>
     </QueryClientProvider>
   );
